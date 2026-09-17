@@ -1,12 +1,10 @@
 ---
 title: Conocimientos y recursos de APRS
-description: Artículos técnicos y prácticos publicados sobre APRS.
+description: Información práctica y técnica sobre APRS.
+template: doc
+tableOfContents: false
 ---
 
-aprs.help es una base de conocimientos concisa sobre el Sistema de Reporte Automático de Paquetes (APRS).
+APRS (Automatic Packet Reporting System) es un sistema para transmitir posiciones, mensajes y telemetría por radioafición. Aquí encontrarás información sobre el protocolo, la configuración de estaciones y los equipos.
 
-## Artículos disponibles
-
-- [Estación APRS móvil](/es/operations/mobile-station/) — componentes básicos y configuración de APRS durante los desplazamientos.
-- [Estructura de un paquete APRS](/es/protocol/basics/aprs-101/) — las partes de un paquete APRS y su significado.
-- [Digipeating](/es/protocol/routing/digipeating/) — cómo se retransmiten paquetes APRS por RF.
+<img class="home-illustration" src="/aprs-network-hero.png" alt="Enlaces APRS entre un excursionista, una ciudad, vehículos, un avión y un satélite." width="1672" height="941" loading="eager" fetchpriority="high" />

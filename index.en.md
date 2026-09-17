@@ -1,12 +1,10 @@
 ---
 title: APRS Knowledge & Resources
-description: Published practical and technical APRS articles.
+description: Practical and technical information about APRS.
+template: doc
+tableOfContents: false
 ---
 
-aprs.help is a focused knowledge base about the Automatic Packet Reporting System (APRS).
+APRS (Automatic Packet Reporting System) is a system for sharing positions, messages and telemetry over amateur radio. This site covers the protocol, station configuration and equipment.
 
-## Available articles
-
-- [Mobile APRS Station](/operations/mobile-station/) — the basic components and configuration of APRS while travelling.
-- [APRS Packet Structure](/protocol/basics/aprs-101/) — the parts of an APRS packet and what they mean.
-- [Digipeating](/protocol/routing/digipeating/) — how APRS packets are relayed over RF.
+<img class="home-illustration" src="/aprs-network-hero.png" alt="APRS radio links connecting a hiker, a city, vehicles, an aircraft and a satellite." width="1672" height="941" loading="eager" fetchpriority="high" />
