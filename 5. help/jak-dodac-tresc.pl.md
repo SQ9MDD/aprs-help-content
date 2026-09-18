@@ -6,8 +6,6 @@ template: doc
 tableOfContents: true
 ---------------------
 
-# Jak dodać treść do APRS.help
-
 APRS.help jest projektem otwartym i każdy może pomóc w rozbudowie bazy wiedzy.
 
 Treści prezentowane na stronie są przechowywane w publicznym repozytorium GitHub:
@@ -64,7 +62,7 @@ tableOfContents: true
 ---
 ```
 
-Pola `title` i `description` powinny być przetłumaczone odpowiednio dla każdej wersji językowej.
+Pola `title` i `description` powinny być przetłumaczone odpowiednio dla każdej wersji językowej. Tytuł strony jest wyświetlany wyłącznie z pola `title`, dlatego na początku treści artykułu nie należy dodawać drugiego nagłówka poziomu 1 (`# Tytuł`).
 
 Przykład polskiej wersji:
 
@@ -75,8 +73,6 @@ description: Podstawowe informacje o działaniu digipeaterów w sieci APRS.
 template: doc
 tableOfContents: true
 ---
-
-# Digipeater APRS
 
 Digipeater jest stacją retransmitującą pakiety APRS odebrane drogą radiową.
 
@@ -154,4 +150,3 @@ To nie problem.
 Do prostych zmian można wykorzystać edytor GitHub dostępny bezpośrednio w przeglądarce. Nie jest konieczne instalowanie Gita ani dodatkowego oprogramowania.
 
 Najważniejsze jest przygotowanie wartościowej treści i wszystkich wymaganych wersji językowych. Mechanizm Pull Request pozwala przed publikacją wspólnie przejrzeć zmiany i w razie potrzeby je poprawić.
-

@@ -6,8 +6,6 @@ template: doc
 tableOfContents: true
 ---------------------
 
-# Inhalte zu APRS.help hinzufügen
-
 APRS.help ist ein offenes Projekt und jeder kann dabei helfen, die Wissensbasis zu erweitern.
 
 Die auf der Website angezeigten Inhalte werden im öffentlichen GitHub-Repository gespeichert:
@@ -64,7 +62,7 @@ tableOfContents: true
 ---
 ```
 
-Die Felder `title` und `description` sollten für jede Sprachversion übersetzt werden.
+Die Felder `title` und `description` sollten für jede Sprachversion übersetzt werden. Der Seitentitel wird ausschließlich aus dem Feld `title` übernommen; füge deshalb am Anfang des Artikelinhalts keine zusätzliche Überschrift der Ebene 1 (`# Titel`) ein.
 
 Beispiel für eine deutsche Version:
 
@@ -75,8 +73,6 @@ description: Grundlegende Informationen über die Funktionsweise von Digipeatern
 template: doc
 tableOfContents: true
 ---
-
-# APRS-Digipeater
 
 Ein Digipeater ist eine Station, die über Funk empfangene APRS-Pakete erneut aussendet.
 
@@ -154,4 +150,3 @@ Kein Problem.
 Für einfache Änderungen kann der GitHub-Editor direkt im Webbrowser verwendet werden. Git oder zusätzliche Software müssen dafür nicht installiert werden.
 
 Am wichtigsten sind nützliche Inhalte und alle erforderlichen Sprachversionen. Über den Pull-Request-Mechanismus können Änderungen vor der Veröffentlichung gemeinsam geprüft und bei Bedarf korrigiert werden.
-
