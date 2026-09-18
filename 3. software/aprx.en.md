@@ -7,7 +7,7 @@ tableOfContents: true
 
 APRX is specialised APRS infrastructure software designed primarily to operate as an **iGate, digipeater, or a combination of both**.
 
-It runs as a daemon on POSIX systems, especially Linux, BSD and other Unix-like systems.
+It runs as a daemon on POSIX-compatible systems, especially Linux, BSD and other Unix-like platforms.
 
 Official repository:
 
@@ -17,9 +17,13 @@ Project page:
 
 https://thelifeofkenneth.com/aprx/
 
-APRX is written in C and was designed from the beginning as lightweight software for continuous infrastructure operation.
+APRX is written in C and was designed from the beginning as lightweight software intended for continuous infrastructure operation.
 
-It is not an audio modem. It uses an external TNC, KISS modem, operating-system AX.25 interface or another supported source of decoded AX.25 frames.
+It is not an audio modem.
+
+To communicate with a radio it uses an external TNC, KISS modem, an AX.25 interface provided by the operating system, or another supported source of decoded frames.
+
+A typical installation can look like this:
 
 ```text
 Radio
@@ -31,42 +35,66 @@ APRX
 APRS-IS
 ```
 
+or as a digipeater:
+
+```text
+Radio
+  |
+TNC / modem
+  |
+APRX
+  |
+Radio
+```
+
+In more advanced installations APRX can handle multiple receivers, transmitters and channels at the same time.
+
 ## Authors and project history
 
-The first and second generations of APRX were written by **Matti Aarnio OH2MQK**.
+The author of the first and second generations of APRX was **Matti Aarnio OH2MQK**.
+
+The code developed by Matti dates from the period:
 
 ```text
 2007-2014
 ```
 
-The source headers describe it as:
+In the APRX source headers the project is described as:
 
 ```text
 2nd generation APRS iGate and digi
 ```
 
-From 2014, maintenance and further development were taken over by **Kenneth W. Finnegan W6KWF**.
+From 2014, project maintenance and further development were taken over by **Kenneth W. Finnegan W6KWF**.
 
-Current repository:
+The current project repository:
 
 https://github.com/PhirePhly/aprx/
 
-APRX is a mature project. Development is slower today, but it remains packaged in Linux distributions and is still used in operational APRS installations.
+contains code from both stages of development.
+
+APRX is a mature project. The pace of development today is much slower than in newer projects, but the software is still present in Linux distributions and remains in use in operational APRS installations.
+
+APRX 2.9.1 is available, among other places, in Debian.
 
 ## APRX philosophy
 
-APRX was designed as infrastructure software with low system requirements and few dependencies.
+One of the fundamental design goals of APRX was to create infrastructure software with low system requirements.
 
-It is well suited to:
+The source code describes the project as a solution intended to have as few dependencies as possible beyond the standard UNIX system library environment.
+
+This makes APRX well suited for:
 
 - small computers,
 - routers,
 - embedded Linux devices,
 - Raspberry Pi,
 - older PCs,
-- 24/7 servers.
+- servers running continuously.
 
-No graphical environment is required.
+The program does not require a graphical environment.
+
+A typical installation simply looks like:
 
 ```text
 system
@@ -78,9 +106,13 @@ aprx daemon
 
 ## APRX is not a modem
 
+This distinction is important.
+
 APRX does not decode AFSK from a sound card.
 
-It needs already decoded AX.25 frames, for example from:
+It needs a source of already decoded AX.25 frames.
+
+For example:
 
 ```text
 Radio
@@ -104,20 +136,26 @@ KISS
 APRX
 ```
 
-APRX handles:
+or a classic hardware TNC.
+
+APRX is responsible for:
 
 - frame routing,
 - digipeating,
-- iGate,
+- iGate operation,
 - APRS-IS,
 - filtering,
 - beacons,
 - telemetry,
 - multi-interface logic.
 
+The modem is responsible for the radio layer.
+
 ## RX iGate
 
-A common use is a **receive-only iGate**:
+One of the most common APRX use cases is a **receive-only iGate**.
+
+In such a setup:
 
 ```text
 RF
@@ -131,6 +169,15 @@ APRX
 APRS-IS
 ```
 
+frames received over radio are forwarded to APRS-IS.
+
+A minimal configuration mainly requires:
+
+- your own callsign,
+- APRS-IS passcode,
+- APRS-IS server,
+- radio interface.
+
 Example APRS-IS block:
 
 ```text
@@ -140,9 +187,15 @@ Example APRS-IS block:
 </aprsis>
 ```
 
+APRX can therefore provide a simple iGate without enabling RF transmission.
+
 ## TX iGate
 
-APRX can also forward selected traffic from APRS-IS to RF.
+APRX also supports transmission from APRS-IS to RF.
+
+This makes it possible to build a full bidirectional iGate.
+
+Diagram:
 
 ```text
 APRS-IS
@@ -154,27 +207,39 @@ APRS-IS
   RF
 ```
 
-`APRSIS` can be used as a digipeater source with:
+A TX iGate should not retransmit all APRS-IS traffic onto the radio channel.
+
+APRX provides mechanisms to limit and filter such traffic.
+
+The `APRSIS` source can be defined in the digipeater section as a separate source with:
 
 ```text
 relay-type third-party
 ```
 
-and combined with filtering, rate limiting and viscous delay.
+It can also use:
+
+- filtering,
+- rate limiting,
+- viscous delay.
+
+This provides much more precise control over traffic sent from the Internet to RF.
 
 ## Digipeater
 
-APRX includes an advanced built-in digipeater.
+APRX includes an advanced built-in digipeater engine.
 
-It supports:
+It supports, among other things, the classic:
 
 ```text
 WIDEn-N
 ```
 
-and ordinary AX.25 aliases.
+mechanism and ordinary AX.25 aliases.
 
-One digipeater section can have one transmitter and multiple packet sources.
+One digipeater section has one transmitter, but it can accept packets from multiple sources.
+
+Example architecture:
 
 ```text
 RX1 ----\
@@ -184,9 +249,21 @@ RX2 ------> APRX ---> TX
 RX3 ----/
 ```
 
+This makes it possible to build systems with:
+
+- several receivers,
+- receiver diversity,
+- separate directional antennas,
+- different channels,
+- a shared transmitter.
+
+This multi-source architecture was one of the features that distinguished APRX from simple digipeater controllers.
+
 ## New-N
 
-APRX supports New-N paths such as:
+APRX supports the modern APRS New-N mechanism.
+
+It can handle paths such as:
 
 ```text
 WIDE1-1
@@ -194,28 +271,46 @@ WIDE2-1
 WIDE2-2
 ```
 
-Custom alias keys and hop limits can also be configured.
+The configuration can define the maximum number of requested and completed hops.
+
+Custom alias keys can also be defined.
+
+This allows APRX to operate both as a local fill-in digipeater and as part of a larger infrastructure network.
 
 ## Viscous digipeating
 
-With **viscous digipeating**, APRX can briefly delay retransmission.
+One of the more characteristic APRX features is **viscous digipeating**.
 
-If it hears that another digipeater has already repeated the packet, it can suppress its own transmission.
+The idea is that the digipeater does not need to retransmit a packet immediately.
+
+It first waits for a short period.
+
+If during that time it hears that another station has already repeated the packet, it can cancel its own transmission.
+
+Diagram:
 
 ```text
 packet received
      |
      v
-short delay
+short wait
      |
-     +---- heard again ---> DROP
+     +---- packet heard again ---> DROP
      |
-     +---- no repeat ----> TX
+     +---- no repeat -----------> TX
 ```
+
+This helps reduce duplicate traffic in areas where coverage from several digipeaters overlaps.
+
+APRX supports viscous delay both within the same interface and between different interfaces.
 
 ## Multiple receivers
 
-APRX can receive frames simultaneously from several interfaces.
+APRX was also designed with larger nodes in mind.
+
+It can receive frames simultaneously from multiple interfaces.
+
+Example:
 
 ```text
 Radio RX North ---> TNC ---\
@@ -225,15 +320,25 @@ Radio RX South ---> TNC ----> APRX ---> Radio TX
 Radio RX Local ---> TNC ---/
 ```
 
-Interfaces can also be grouped with:
+This allows nodes with several receivers and a single transmitter.
+
+Interfaces can also be grouped using:
 
 ```text
 igate-group
 ```
 
+which helps correctly handle iGate logic in installations with multiple receivers and transmitters operating on the same channel.
+
 ## Multiple channels
 
-APRX can handle multiple radio channels and digipeater sections.
+APRX is not limited to one radio channel.
+
+Multiple interfaces and multiple digipeater sections can be configured.
+
+A single APRX instance can therefore operate a more complex node.
+
+For example:
 
 ```text
 144.800 MHz ---> APRS
@@ -241,15 +346,21 @@ APRX can handle multiple radio channels and digipeater sections.
 other RF    ---> local channel
 ```
 
+The exact configuration depends on the modems and interfaces used.
+
 ## KISS interfaces
 
-APRX supports classic serial TNCs using:
+APRX can work with classic serial TNCs.
+
+Standard:
 
 ```text
 KISS
 ```
 
-and several extensions:
+is supported, along with several related extensions.
+
+The configuration includes, among others:
 
 ```text
 KISS
@@ -258,51 +369,79 @@ SMACK / CRC16
 FLEXNET
 ```
 
+This gives APRX compatibility with different generations and types of hardware TNCs and modems.
+
 ## TNC2 monitor mode
 
-APRX can also receive textual:
+APRX can also receive data in:
 
 ```text
 TNC2
 ```
 
-monitor format.
+monitor format, the textual format known from classic TNCs.
+
+This makes it possible to integrate sources that do not provide KISS but can output received frames in monitor format.
 
 ## Linux AX.25
 
-On Linux, APRX can use kernel AX.25 interfaces directly:
+On Linux systems APRX can also use AX.25 interfaces provided directly by the operating-system kernel.
+
+Configuration can use:
 
 ```text
 ax25-device
 ```
 
+APRX can then receive frames from the kernel AX.25 stack.
+
+This is not required.
+
+The project was designed so that it can also operate without AX.25 support in the kernel.
+
 ## DPRS
 
-APRX includes **D-PRS** support:
+APRX also includes **D-PRS** support.
+
+It can receive DPRS data and convert it into APRS.
+
+The project includes gateway functionality:
 
 ```text
 D-PRS -> APRS
 ```
 
+This was developed mainly to integrate position data originating from digital radio systems.
+
 ## APRS-IS
 
 APRX includes its own APRS-IS client.
 
-Example:
+It can connect to Tier2 servers and handle multiple server definitions.
+
+For example:
 
 ```text
 server rotate.aprs2.net
 ```
 
-APRS-IS filters can also be used:
+APRS-IS filters can also be used.
+
+Example:
 
 ```text
 filter "m/100"
 ```
 
+meaning traffic within 100 km of the station position.
+
+Other filters compatible with the javAPRSSrvr/APRS-IS filtering mechanism can also be used.
+
 ## Traffic filtering
 
-Traffic can be filtered by:
+APRX provides extensive traffic-filtering mechanisms.
+
+Traffic can be filtered by, among other things:
 
 - source,
 - destination,
@@ -310,35 +449,47 @@ Traffic can be filtered by:
 - payload,
 - geographic area.
 
+Regular-expression filters and geographic filters are available.
+
+For example, a selected callsign can be blocked or retransmission can be limited to a chosen area.
+
 Example:
 
 ```text
 filter -b/CALL
 ```
 
+Filtering can be applied separately to different digipeater sources.
+
 ## Rate limiting
 
-Global limit:
+APRX includes mechanisms for limiting the number of retransmitted frames.
+
+A global digipeater limit can be configured with:
 
 ```text
 ratelimit
 ```
 
-Per-source limit:
+and a limit for individual source callsigns with:
 
 ```text
 srcratelimit
 ```
 
+This helps protect the channel from a situation in which one station generates an excessive amount of traffic.
+
 ## Beacons
 
-APRX has its own beacon generator for:
+APRX has its own beacon generator.
+
+It can generate, among other things:
 
 - positions,
 - items,
 - objects,
 - raw APRS frames,
-- file-based data.
+- data read from a file.
 
 Example:
 
@@ -346,11 +497,19 @@ Example:
 beacon symbol "I&" $myloc comment "Tx-iGate"
 ```
 
-Beacon timing is intentionally spread and slightly randomised to reduce collisions.
+Beacons can be sent through a selected interface and with a selected path.
+
+APRX intentionally spreads beacon transmission times instead of sending all beacons at exactly the same instant.
+
+Intervals are also slightly randomised to statistically reduce the probability of collisions between stations.
 
 ## Telemetry
 
-APRX can collect infrastructure telemetry such as:
+APRX has its own infrastructure telemetry system.
+
+The program collects traffic data for individual interfaces.
+
+Among other values it monitors:
 
 ```text
 RX
@@ -358,13 +517,19 @@ DROP
 TX
 ```
 
-along with packet and byte counters.
+as well as packet and byte counters.
+
+The data can be aggregated over time and published as APRS telemetry.
+
+APRX can send this telemetry to APRS-IS and optionally to RF.
 
 ## Erlang monitor
 
-APRX includes an **erlang monitor** for channel occupancy.
+An interesting APRX component is the built-in **erlang monitor**.
 
-Typical statistic intervals:
+The name comes from the unit used to describe channel occupancy.
+
+APRX measures actual traffic on its interfaces and collects statistics in intervals such as:
 
 ```text
 1 minute
@@ -372,20 +537,28 @@ Typical statistic intervals:
 20 minutes
 ```
 
+This allows the operator to observe the load on the radio channel.
+
+The statistics can be written to a state file so that short program restarts do not necessarily erase the current measurements.
+
 ## Logging
 
-Separate logs can be maintained for:
+APRX can maintain separate logs for, among other things:
 
-- RF frames,
-- APRS-IS,
+- received RF frames,
+- APRS-IS connections,
 - DPRS,
 - erlang statistics.
+
+Example files:
 
 ```text
 aprx-rf.log
 aprx.log
 erlang.log
 ```
+
+Logs can be rotated normally by the operating system.
 
 ## Configuration
 
@@ -394,6 +567,8 @@ The main configuration file is usually:
 ```text
 /etc/aprx.conf
 ```
+
+Its syntax resembles Apache-style configuration.
 
 Example:
 
@@ -410,7 +585,7 @@ mycall SQ9ABC-1
 </interface>
 ```
 
-Common sections include:
+Configuration sections include, among others:
 
 ```text
 <aprsis>
@@ -421,7 +596,13 @@ Common sections include:
 <digipeater>
 ```
 
+Multiple interfaces, beacons and telemetry sections can be defined.
+
 ## APRX with Dire Wolf
+
+A very practical combination is to use APRX for infrastructure logic and an external modem for the radio layer.
+
+Diagram:
 
 ```text
 Radio
@@ -435,11 +616,22 @@ APRX
 APRS-IS
 ```
 
-Dire Wolf handles AFSK modulation and demodulation.
+Dire Wolf then handles AFSK modulation and demodulation.
 
-APRX handles infrastructure logic, filtering, routing, iGate and digipeating.
+APRX handles:
+
+- digipeating,
+- iGate,
+- filters,
+- multiple sources,
+- telemetry,
+- routing.
+
+This separation of responsibilities fits the APRX architecture, which does not require its own audio modem.
 
 ## APRX with a hardware TNC
+
+A hardware KISS device can be used in exactly the same way:
 
 ```text
 Radio
@@ -451,25 +643,33 @@ KISS
 APRX
 ```
 
+Thanks to standard KISS, APRX remains independent of a particular modem model.
+
 ## Low system requirements
 
-APRX is written in C and has no graphical interface.
+APRX is written in C and has no graphical user interface.
 
-It is suitable for:
+Its hardware requirements are therefore small.
+
+It works well on:
 
 - Raspberry Pi,
-- small x86 systems,
+- small x86 computers,
 - older hardware,
-- embedded Linux,
+- embedded Linux devices,
 - virtual machines.
+
+In a typical infrastructure installation it can run for months without operator interaction.
 
 ## Stability and maturity
 
-APRX has a long history and has been proven in many real APRS installations.
+APRX has a long history.
 
-The 2.9.1 line remains available in Debian.
+Its core architecture was created many years ago and has been proven in a large number of real APRS installations.
 
-Today APRX should mainly be regarded as **mature infrastructure software**.
+The 2.9.1 line remains available in Debian packages.
+
+The repository still has issues and pull requests, but today the project should primarily be regarded as **mature infrastructure software**, not as a rapidly changing application.
 
 ## What APRX does not do
 
@@ -478,10 +678,12 @@ APRX is not:
 - an audio modem,
 - a graphical APRS client,
 - an APRS map,
-- a station tracking application,
-- a daily operator messaging application.
+- a station-tracking application,
+- an operator-facing daily messaging client.
 
-Its main role is infrastructure.
+Its place is mainly in infrastructure.
+
+The simplest view is:
 
 ```text
 radio
@@ -497,30 +699,38 @@ APRS-IS / RF
 
 ## Who is APRX for?
 
-APRX is a good fit for:
+APRX is a good fit when you need:
 
 - RX iGate,
 - TX iGate,
 - digipeater,
 - combined digi + iGate,
-- multi-receiver nodes,
-- multiple radio interfaces,
+- a node with multiple receivers,
+- an installation with several radio interfaces,
 - routing between ports,
 - traffic filtering,
 - infrastructure telemetry,
-- lightweight 24/7 operation.
+- a very lightweight daemon operating 24/7.
+
+It is especially interesting where the operator wants full control over APRS infrastructure logic while treating the radio modem as a separate layer.
 
 ## License
 
-APRX is open-source software under:
+APRX is open-source software.
+
+The project is distributed under:
 
 ```text
 BSD 3-Clause
 ```
 
+This allows the code to be analysed, modified and used under the terms of that licence.
+
 ## Summary
 
-APRX is one of the classic APRS infrastructure programs.
+APRX is one of the classic infrastructure programs of the APRS world.
+
+Its main strength is not a single feature, but the ability to build an entire node around one process:
 
 ```text
 multiple receivers
@@ -533,7 +743,25 @@ multiple receivers
     RF / APRS-IS
 ```
 
-It combines RX and TX iGate, New-N and viscous digipeating, multiple interfaces, KISS, Linux AX.25, filtering, rate limiting, beacons, telemetry, channel monitoring, DPRS and APRS-IS.
+The program combines:
+
+- RX iGate,
+- TX iGate,
+- New-N digipeating,
+- viscous digipeating,
+- multiple interfaces,
+- KISS and Linux AX.25,
+- filtering,
+- rate limiting,
+- beacons,
+- telemetry,
+- channel-load monitoring,
+- DPRS,
+- APRS-IS.
+
+At the same time it remains a small daemon written in C that does not require a graphical environment or a large operating system.
+
+This is why APRX has remained a popular choice for continuously operating APRS infrastructure stations for many years.
 
 ## Documentation
 
