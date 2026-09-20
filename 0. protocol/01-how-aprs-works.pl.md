@@ -13,6 +13,8 @@ Dlatego APRS najlepiej rozumieć nie jako pojedynczą liniową trasę, ale jako 
 
 Najprostsza droga pakietu może wyglądać tak:
 
+![Droga pakietu via RF](./_img/diagram1.png)
+
 ```text
 Stacja A
    |
