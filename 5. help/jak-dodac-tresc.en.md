@@ -99,6 +99,28 @@ Example:
 
 If you are unsure which section is the best fit, choose the closest topic. The location can be adjusted during Pull Request review.
 
+## Images, diagrams and screenshots
+
+Place article-specific images in an `_img/` directory next to the Markdown files. Directories whose names begin with `_` are not displayed in the documentation menu.
+
+```text
+4. sprzęt/
+  modem-kiss.pl.md
+  modem-kiss.en.md
+  modem-kiss.es.md
+  modem-kiss.de.md
+  _img/
+    modem-kiss-connection.png
+```
+
+Use a relative Markdown path in the article:
+
+```markdown
+![KISS modem connection diagram](./_img/modem-kiss-connection.png)
+```
+
+The same image file may be used in every language version, but translate the alternative text in the square brackets. Use descriptive file names; use PNG, JPEG or WebP for photos and screenshots, and SVG for simple diagrams when available.
+
 ## How to submit new content
 
 The recommended method is the standard GitHub workflow:

@@ -99,6 +99,28 @@ Ejemplo:
 
 Si no estás seguro de qué sección es la más adecuada, elige la temática más cercana. La ubicación puede corregirse durante la revisión del Pull Request.
 
+## Imágenes, diagramas y capturas de pantalla
+
+Guarda las imágenes específicas del artículo en un directorio `_img/` junto a los archivos Markdown. Los directorios cuyos nombres empiezan por `_` no se muestran en el menú de documentación.
+
+```text
+4. sprzęt/
+  modem-kiss.pl.md
+  modem-kiss.en.md
+  modem-kiss.es.md
+  modem-kiss.de.md
+  _img/
+    modem-kiss-conexion.png
+```
+
+Usa una ruta Markdown relativa dentro del artículo:
+
+```markdown
+![Diagrama de conexión del módem KISS](./_img/modem-kiss-conexion.png)
+```
+
+El mismo archivo de imagen puede utilizarse en todas las versiones lingüísticas, pero el texto alternativo entre corchetes debe traducirse. Usa nombres de archivo descriptivos; para fotos y capturas de pantalla utiliza PNG, JPEG o WebP, y para diagramas sencillos SVG siempre que sea posible.
+
 ## Cómo enviar nuevo contenido
 
 El método recomendado es el flujo de trabajo estándar de GitHub:

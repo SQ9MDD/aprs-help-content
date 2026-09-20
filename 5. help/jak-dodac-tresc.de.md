@@ -99,6 +99,28 @@ Beispiel:
 
 Wenn du nicht sicher bist, welche Kategorie am besten passt, wähle die thematisch ähnlichste. Der Speicherort kann während der Prüfung des Pull Requests angepasst werden.
 
+## Bilder, Diagramme und Screenshots
+
+Lege artikelbezogene Bilder in einem Verzeichnis `_img/` neben den Markdown-Dateien ab. Verzeichnisse, deren Name mit `_` beginnt, werden nicht im Dokumentationsmenü angezeigt.
+
+```text
+4. sprzęt/
+  modem-kiss.pl.md
+  modem-kiss.en.md
+  modem-kiss.es.md
+  modem-kiss.de.md
+  _img/
+    modem-kiss-anschluss.png
+```
+
+Verwende im Artikel einen relativen Markdown-Pfad:
+
+```markdown
+![Anschlussschema eines KISS-Modems](./_img/modem-kiss-anschluss.png)
+```
+
+Dieselbe Bilddatei kann in allen Sprachversionen verwendet werden, der Alternativtext in den eckigen Klammern muss jedoch übersetzt werden. Verwende aussagekräftige Dateinamen; für Fotos und Screenshots eignen sich PNG, JPEG oder WebP, für einfache Diagramme nach Möglichkeit SVG.
+
 ## Neue Inhalte einreichen
 
 Empfohlen wird der übliche GitHub-Ablauf:

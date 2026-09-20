@@ -99,6 +99,28 @@ Przykład:
 
 Jeżeli nie masz pewności, do której sekcji pasuje nowy artykuł, wybierz najbardziej zbliżoną tematycznie. Lokalizacja może zostać skorygowana podczas przeglądu Pull Requesta.
 
+## Obrazki, schematy i zrzuty ekranu
+
+Grafiki związane z artykułem umieszczaj w katalogu `_img/` obok plików Markdown. Katalogi zaczynające się od `_` nie są wyświetlane w menu dokumentacji.
+
+```text
+4. sprzęt/
+  modem-kiss.pl.md
+  modem-kiss.en.md
+  modem-kiss.es.md
+  modem-kiss.de.md
+  _img/
+    modem-kiss-podlaczenie.png
+```
+
+W artykule użyj względnej ścieżki Markdown:
+
+```markdown
+![Schemat podłączenia modemu KISS](./_img/modem-kiss-podlaczenie.png)
+```
+
+Ten sam plik graficzny może być użyty we wszystkich wersjach językowych, ale tekst alternatywny w nawiasach kwadratowych należy przetłumaczyć. Używaj opisowych nazw plików; dla zdjęć i zrzutów ekranu wybieraj PNG, JPEG lub WebP, a dla prostych schematów — SVG, gdy jest dostępny.
+
 ## Jak przesłać nową treść
 
 Najwygodniejszą metodą jest standardowy mechanizm GitHub:
