@@ -1,671 +1,111 @@
 ---
 title: How does APRS work?
-description: An overview of how information travels through APRS, from radio transmission through digipeaters and IGates to APRS-IS and applications.
+description: How APRS packets travel through radio, digipeaters, IGates, and APRS-IS.
 template: doc
 tableOfContents: true
 ---
 
-APRS is a distributed system.
+APRS is a broadcast network. A station transmits a packet over the air, and every receiver within range can receive and use it independently. There is no central node or mandatory route: a packet may remain local, be retransmitted by a digipeater, reach the Internet through an IGate—or do several of those things at once.
 
-There is no single central point through which every piece of information must pass. A packet can be received directly by another station, repeated by a digipeater, forwarded to APRS-IS by an IGate, or reach several parts of the infrastructure at the same time.
+## Station to station: APRS works over radio
 
-For this reason, APRS is best understood not as a single linear route, but as **a radio network in which one transmission can be used by many receivers**.
+The simplest case needs neither the Internet nor infrastructure. A mobile station transmits a packet and a home station receives it directly over RF.
 
-The simplest packet path can look like this:
+![Direct reception of an APRS packet over radio](./_img/diagram1.png)
 
-```text
-Station A
-   |
-   | RF
-   v
-Station B
-```
+The received packet may contain, for example, a position, status, message, weather data, or telemetry. If the receiver understands its format, the information is immediately useful. That is a complete, correctly functioning APRS exchange.
 
-But in a larger network, the same packet can reach several receivers at the same time:
-
-```text
-                  -> Station B
-                 /
-Station A -------+-> Digipeater
-                 \
-                  -> IGate
-```
-
-Each of these elements has a different role.
-
-## The simplest case: station to station
-
-APRS does not require the Internet, a server, or a digipeater to work.
-
-If two stations are within direct radio range of each other, one can transmit an APRS packet and the other can receive it directly.
-
-```text
-Station A
-   |
-   | RF
-   v
-Station B
-```
-
-Station A can, for example, transmit:
-
-- its position,
-- status,
-- monitored frequency,
-- a message,
-- telemetry data,
-- weather information.
-
-If Station B can receive and interpret that type of information, it can use it immediately.
-
-At this stage, the packet does not need to go anywhere else.
-
-This is already a correctly functioning APRS exchange.
-
-## What is actually transmitted?
-
-A typical APRS packet on the radio layer is carried in an **AX.25 UI** frame, where UI means *Unnumbered Information*.
-
-In simplified form, it contains, among other things:
-
-- the source station callsign,
-- the destination field,
-- the path,
-- the APRS information field.
-
-In text representation, such a packet can look like this:
+Over radio, APRS data is usually carried in an **AX.25 UI** (*Unnumbered Information*) frame. Its text representation may look like this:
 
 ```text
 SQ9MDD-7>APRS,WIDE1-1:!5012.34N/01956.78E>
 ```
 
-At this stage, however, the most important point is not exactly how the packet is built, but what happens to it after transmission.
+The source callsign, destination address, path, and information field describe the frame and its APRS content. Later articles cover packet structure; here, the important question is what happens after transmission.
 
-The detailed structure of AX.25 frames and APRS data is described in later articles.
+## One transmission, many receivers
 
-## One transmission can have many receivers
+RF is a shared medium. The same transmission can be received simultaneously by a user station, a digipeater, and an IGate.
 
-A radio transmission is not directed to a single physical device in the same way as a classic point-to-point connection.
+![One APRS transmission received by a station, digipeater, and IGate](./_img/diagram2.png)
 
-If several stations are within range of the transmitter, they can all receive the same packet.
+Reception does not create a queue or a forwarding chain. Each receiver makes its own decision: it displays the data, retransmits the packet over radio, or forwards it to APRS-IS. This is why multiple paths for the same information are normal in APRS.
 
-For example:
+## Digipeater: extending RF coverage
 
-```text
-                -> Station B
-               /
-Station A -----+-> Digipeater
-               \
-                -> IGate
-```
+A **digipeater** receives a radio packet and—when its path and configuration allow it—transmits it again. This lets the information reach beyond the direct range of the source station.
 
-The same single transmission from Station A can therefore be received by:
+![Retransmission of an APRS packet by a digipeater](./_img/diagram3.png)
 
-- another user station,
-- a digipeater,
-- an IGate,
-- several such devices at the same time.
+A digipeater should not repeat everything. Its decision depends, among other things, on the addresses in the path, the network's local operating policy, and duplicate protection. Paths such as `WIDE1-1` and `WIDE2-n` are commonly used; their semantics and configuration rules are covered separately.
 
-This does not mean the packet must later pass through every one of these elements.
-
-Each receiver can perform its own task independently of the others.
-
-## The role of a digipeater
-
-A **digipeater** is a station that can receive an APRS packet and retransmit it over radio.
-
-Its primary purpose is to extend the radio range of the information.
-
-Example:
+The role of a digipeater can be summarized as:
 
 ```text
-Station A
-   |
-   | RF
-   v
-Digipeater
-   |
-   | RF
-   v
-Station B
+RF → RF
 ```
 
-Station B may be outside the direct range of Station A but can still receive its packet thanks to retransmission.
+It does not automatically imply Internet access.
 
-A digipeater does not, however, automatically repeat every frame it receives.
+## IGate and APRS-IS: the RF–Internet boundary
 
-The decision to retransmit depends, among other things, on:
+An **IGate** (*Internet Gateway*) hears local RF traffic and forwards selected packets to **APRS-IS**, the global network of servers that distributes APRS data. This makes locally received packets available to applications, maps, and monitoring services.
 
-- the packet path,
-- digipeater configuration,
-- duplicate suppression mechanisms,
-- local network policy.
+![Data forwarded from the RF network through an IGate to APRS-IS](./_img/diagram4.png)
 
-Modern APRS networks most often use path mechanisms based, among other things, on `WIDE1-1` and `WIDE2-n`.
-
-The detailed rules for paths and digipeaters are described separately.
-
-## A digipeater is not an IGate
-
-A digipeater and an IGate are two different functions.
-
-A digipeater works primarily on the radio side:
+The primary direction of an IGate is:
 
 ```text
-RF -> RF
+RF → APRS-IS
 ```
 
-It receives a radio packet and, under defined conditions, retransmits it over radio.
+An IGate can operate without digipeating, and a digipeater can operate without an IGate. A single station can of course perform both roles, but they are independent functions:
 
-An IGate, on the other hand, connects the radio network to APRS-IS:
+| Element | Role | Primary direction |
+| --- | --- | --- |
+| Digipeater | Extends local radio-network coverage | `RF → RF` |
+| IGate | Connects local RF to APRS-IS | `RF → APRS-IS` |
+| APRS-IS | Distributes packets over the Internet | Internet |
 
-```text
-RF -> Internet
-```
+APRS-IS extends the reach of information, but it does not replace the radio channel. A packet that does not appear on an Internet service may still have been received and used correctly locally.
 
-One device can perform both roles at the same time, but it does not have to.
+## Why the same frame appears more than once
 
-A station can therefore be:
+In a real network, multiple IGates may hear the original transmission and its retransmission. Each can forward the frame to APRS-IS.
 
-- a digipeater only,
-- an IGate only,
-- both a digipeater and an IGate.
+![Multiple reception paths for the same APRS transmission](./_img/diagram5.png)
 
-Understanding this distinction is important for understanding the entire APRS infrastructure.
+This is not a transmission error; it follows from the broadcast nature of RF. Digipeaters, IGates, and APRS-IS servers use duplicate recognition to avoid propagating the same frame further. Details depend on the implementation and configuration of each node.
 
-## The role of an IGate
+## From the Internet back to radio
 
-An **IGate**, or Internet Gateway, receives packets from the local radio channel and can forward them to the APRS-IS network.
+The `APRS-IS → RF` direction is deliberately limited. The radio channel has low capacity and is shared by every station, so an IGate cannot treat it as a complete copy of APRS-IS.
 
-Example:
+A typical controlled case is a message addressed to a local station that the IGate has heard on RF recently. When selected traffic is sent from APRS-IS to radio, the **third-party traffic** mechanism can be used to preserve information about the packet's origin. Gating rules, q-constructs, and the third-party traffic format deserve separate treatment.
 
-```text
-Station A
-   |
-   | RF
-   v
-IGate
-   |
-   | Internet
-   v
-APRS-IS
-```
+## The complete picture
 
-If the IGate receives a packet from Station A, it can send it to APRS-IS.
+The diagram below shows these roles working together. RF communication spreads locally; IGates move data between local radio and APRS-IS; applications and services use the data available on the Internet.
 
-From that point onward, the information can become available to:
+![Data flow between RF stations, digipeaters, IGates, and APRS-IS](./_img/diagram6.png)
 
-- APRS clients,
-- mapping services,
-- databases,
-- monitoring applications,
-- other systems using APRS-IS.
+For one packet, three outcomes may therefore occur in parallel:
 
-An IGate is not required for APRS to work locally.
+- local reception by other stations,
+- extended coverage through digipeating,
+- publication to APRS-IS through one or more IGates.
 
-Its primary role is to connect the local radio network to Internet infrastructure.
+None is required for the others to occur. Local APRS can work without the Internet, and an IGate can forward a packet to APRS-IS without a digipeater.
 
-## The role of APRS-IS
+## Key points
 
-**APRS-IS, the APRS Internet System**, is a global Internet infrastructure used to distribute APRS data.
-
-Among other things, APRS-IS receives packets forwarded by IGates.
-
-A simplified diagram can look like this:
-
-```text
-RF network
-   |
-   v
-IGate
-   |
-   v
-APRS-IS
-   |
-   +-> APRS applications
-   |
-   +-> mapping services
-   |
-   +-> monitoring systems
-   |
-   +-> other services
-```
-
-APRS-IS allows applications to receive data originating from many different geographical areas.
-
-This does not mean APRS-IS replaces the radio network.
-
-It extends it.
-
-## A typical packet path
-
-Consider a simple example.
-
-The station:
-
-```text
-SQ9MDD-7
-```
-
-transmits an APRS packet over radio.
-
-The packet can be received by a local station:
-
-```text
-SQ9MDD-7
-   |
-   | RF
-   v
-Station B
-```
-
-At this point, the information is already useful.
-
-At the same time, the same packet can be received by a digipeater:
-
-```text
-SQ9MDD-7
-   |
-   | RF
-   v
-Digipeater
-```
-
-If the path and configuration allow it, the digipeater retransmits the packet:
-
-```text
-SQ9MDD-7
-   |
-   | RF
-   v
-Digipeater
-   |
-   | RF
-   v
-Station C
-```
-
-The packet can also be received by an IGate:
-
-```text
-SQ9MDD-7
-   |
-   | RF
-   v
-IGate
-   |
-   | Internet
-   v
-APRS-IS
-```
-
-The data can then be retrieved by an application:
-
-```text
-SQ9MDD-7
-   |
-   v
-IGate
-   |
-   v
-APRS-IS
-   |
-   v
-APRS application
-```
-
-This can still be the same original packet.
-
-## A packet does not have to pass through every stage
-
-It is very important not to treat this path as a mandatory chain:
-
-```text
-Station -> Digipeater -> IGate -> APRS-IS
-```
-
-That is only one possible route.
-
-A packet can be received directly:
-
-```text
-Station A -> Station B
-```
-
-It can be received by an IGate without a digipeater:
-
-```text
-Station A -> IGate -> APRS-IS
-```
-
-It can remain entirely within the radio network:
-
-```text
-Station A -> Digipeater -> Station B
-```
-
-It can also reach several receivers at the same time:
-
-```text
-                     -> Station B
-                    /
-Station A -> Digipeater -> Station C
-       \            \
-        \            -> IGate 2
-         \
-          -> IGate 1
-```
-
-APRS therefore does not have one mandatory packet route.
-
-## One frame can arrive by many paths
-
-In a real network, the same frame can be received by several digipeaters and several IGates.
-
-For example:
-
-```text
-                    -> IGate 1
-                   /
-Station A -> DIGI -+-> IGate 2
-        \          \
-         \          -> Station B
-          \
-           -> IGate 3
-```
-
-In addition, some IGates may also receive the original transmission directly.
-
-As a result, the same information can reach the infrastructure through more than one path.
-
-This is normal in APRS.
-
-## Duplicates
-
-Because one transmission can be received and forwarded by many parts of the infrastructure, APRS must deal with duplicates.
-
-The same frame can, for example, be:
-
-- received directly by an IGate,
-- received again after retransmission by a digipeater,
-- received by a second IGate,
-- forwarded to APRS-IS from several locations.
-
-For this reason, digipeaters, IGates, and servers can use mechanisms to recognize and reject duplicates.
-
-Without such mechanisms, one transmission could multiply unnecessarily through the network.
-
-Detailed duplicate handling rules depend on the specific infrastructure component and are described later in the documentation.
-
-## RF to APRS-IS
-
-The direction:
-
-```text
-RF -> APRS-IS
-```
-
-is one of the primary tasks of an IGate.
-
-Packets received locally over radio can be forwarded to APRS-IS, where they become available to Internet applications.
-
-This does not mean that every received frame must be forwarded.
-
-An IGate can apply specific rules and filters depending on its configuration and the type of traffic.
-
-## APRS-IS to RF
-
-The opposite direction:
-
-```text
-APRS-IS -> RF
-```
-
-requires much more care.
-
-The radio channel has limited capacity, so the entire APRS-IS traffic cannot simply be retransmitted onto RF.
-
-Only selected information can be forwarded to radio according to IGate operating rules.
-
-A typical example is a message addressed to a local station that has recently been heard by that IGate.
-
-The path can then look like this:
-
-```text
-APRS-IS
-   |
-   v
-IGate
-   |
-   | RF
-   v
-Local station
-```
-
-Traffic in the Internet -> RF direction requires control because every such packet consumes airtime on the shared radio channel.
-
-Detailed APRS-IS -> RF gating rules are described separately.
-
-## Third-party traffic
-
-In some situations, a packet originating in another part of the system must be placed onto RF again.
-
-APRS provides a special **third-party traffic** mechanism for this purpose.
-
-This is not simply a matter of copying a text packet from APRS-IS and transmitting it unchanged over radio.
-
-The original information is placed inside a special structure that preserves information about its origin.
-
-This mechanism is important, among other things, for controlled forwarding of selected traffic from APRS-IS to RF.
-
-The detailed third-party traffic syntax is described in the section covering special formats.
-
-## What works without the Internet?
-
-A lot.
-
-Example:
-
-```text
-HT
- |
- | RF
- v
-Digipeater
- |
- | RF
- v
-Mobile radio
-```
-
-If the mobile radio operator receives the packet from the portable station, APRS has fulfilled its purpose.
-
-APRS-IS is not required.
-
-An Internet map is not required.
-
-No server is required.
-
-**No Internet does not mean no APRS.**
-
-## What works without a digipeater?
-
-If stations are within direct range of one another, a digipeater is not required.
-
-```text
-Station A
-   |
-   +-----> Station B
-   |
-   +-----> IGate
-```
-
-Station B can use the information locally, while the IGate can independently forward it to APRS-IS.
-
-A digipeater is needed only when retransmission actually extends the useful range of the network.
-
-## What works without an IGate?
-
-A complete local radio network can still work.
-
-```text
-Station A
-   |
-   v
-Digipeater
-   |
-   v
-Station B
-```
-
-Stations can exchange positions, status reports, messages, and other information without any connection to APRS-IS.
-
-The packets will not appear in Internet services, but the local APRS function remains fully useful.
-
-## Direct reception matters
-
-In practice, a packet received directly may be more valuable than information available through the Internet.
-
-If a nearby station transmits:
-
-```text
-SP9XYZ
-145.550 MHz
-```
-
-an operator can immediately use that information to establish communication.
-
-There is no need to wait for the packet to:
-
-- be received by an IGate,
-- reach APRS-IS,
-- be stored by an Internet service,
-- be retrieved by an application.
-
-The local radio path is a fundamental part of APRS.
-
-## Common misconceptions
-
-### Every packet must pass through a digipeater
-
-No.
-
-If the receiver is within direct range of the transmitter, it can receive the packet without any retransmission.
-
-### A digipeater forwards packets to the Internet
-
-Not necessarily.
-
-The primary function of a digipeater is to retransmit packets over radio.
-
-The IGate function is responsible for connection to APRS-IS.
-
-### An IGate must also be a digipeater
-
-No.
-
-An IGate can simply receive RF traffic and forward it to APRS-IS.
-
-### If a packet does not appear on APRS.fi, APRS did not work
-
-No.
-
-The packet may have been received correctly and used locally by other stations.
-
-### APRS-IS sends all traffic back to radio
-
-No.
-
-Traffic from APRS-IS to RF must be limited and controlled.
-
-### A packet has one fixed route
-
-No.
-
-The same transmission can be received by many stations and reach the infrastructure through different paths.
-
-## The whole picture
-
-A simplified model of APRS operation can be shown like this:
-
-```text
-                         +-> Local station
-                         |
-[APRS station] -- RF ----+-> [Digipeater] -- RF --> other stations
-                         |
-                         +-> [IGate]
-                               |
-                               | Internet
-                               v
-                            [APRS-IS]
-                               |
-                 +-------------+-------------+
-                 |             |             |
-                 v             v             v
-             applications     maps        services
-```
-
-The most important point is that none of these paths is mandatory.
-
-APRS can work as:
-
-```text
-station -> station
-```
-
-```text
-station -> digipeater -> station
-```
-
-```text
-station -> IGate -> APRS-IS
-```
-
-or through all of these paths at the same time.
-
-## Key points to remember
-
-**APRS is a distributed system.**
-
-One transmission can be received by many stations at the same time.
-
-**A digipeater extends radio coverage.**
-
-Its primary role is retransmitting RF packets.
-
-**An IGate connects the local radio network to APRS-IS.**
-
-It does not have to be a digipeater at the same time.
-
-**APRS-IS extends the reach of information beyond the local radio network.**
-
-It does not replace basic RF communication.
-
-**A packet does not have to reach the Internet to fulfil its purpose.**
-
-Local reception of the information may be its most important goal.
-
-**One frame can arrive through many paths.**
-
-Duplicates and their suppression are therefore a natural part of network operation.
-
-**Traffic from the Internet to RF must be controlled.**
-
-The radio channel has limited capacity and cannot be treated as a copy of APRS-IS.
+- APRS is not a single route: `station → digipeater → IGate → Internet`.
+- One RF transmission can be useful to many receivers and reach them by different paths.
+- A digipeater retransmits radio traffic; an IGate connects RF with APRS-IS.
+- Duplicates are natural in a broadcast network and are filtered by its components.
+- The Internet improves the availability of data, but is not a condition for local APRS to work.
+- Traffic from the Internet to RF must be selective so it does not burden the shared channel.
 
 ## Next
 
-After understanding how information travels through the network, the next topics to study are:
-
-- the relationship between APRS and AX.25,
-- AX.25 frame structure,
-- APRS packet structure,
-- source addresses and SSIDs,
-- destination addresses and TOCALL,
-- digipeater paths,
-- differences between RF and APRS-IS,
-- third-party traffic mechanisms,
-- q-constructs,
-- detailed IGate operating rules.
-
-Only when these elements are combined does the full picture emerge of how APRS information moves between stations and the different parts of the infrastructure.
+The next step is to learn the structure of AX.25 frames and APRS packets, source addresses and SSIDs, the destination/TOCALL field, digipeater paths, and the differences between RF and APRS-IS traffic.
