@@ -1,5 +1,5 @@
 ---
-order: 0
+order: 2
 title:
   pl: "Wprowadzenie"
   en: "Introduction"
