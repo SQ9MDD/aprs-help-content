@@ -3,7 +3,6 @@ title: "Mic-E: historia, aplicaciones y formato de datos"
 description: "Codificación de posiciones APRS en la dirección de destino y el campo de información AX.25, historia de Mic-E, extensiones y reglas de decodificación."
 ---
 
-# Mic-E: historia, aplicaciones y formato de datos
 
 **Mic-E (Microphone Encoder)** es un formato de informes de posición APRS compactos. Su característica distintiva es que utiliza tanto el campo de información AX.25 como la dirección de destino. Los seis caracteres de esta dirección contienen la latitud codificada y otros datos; el campo de información completa el informe con longitud, rumbo, velocidad y símbolo. Mic-E no es un protocolo de enlace independiente ni una variante del formato *Compressed Position* basado en Base-91.
 
