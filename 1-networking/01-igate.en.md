@@ -1,5 +1,5 @@
 ---
-title: "01. IGate and data exchange with APRS-IS"
+title: "IGate and data exchange with APRS-IS"
 description: The role of IGate, packet forwarding directions, q constructs, and APRS-IS traffic delivery mechanisms independent of filters.
 ---
 

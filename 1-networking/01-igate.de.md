@@ -1,5 +1,5 @@
 ---
-title: "01. IGate und Datenaustausch mit APRS-IS"
+title: "IGate und Datenaustausch mit APRS-IS"
 description: Rolle des IGate, Weiterleitungsrichtungen, q constructs und Mechanismen der APRS-IS-Datenzustellung unabhängig von Filtern.
 ---
 

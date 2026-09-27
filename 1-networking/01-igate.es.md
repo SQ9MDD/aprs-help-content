@@ -1,5 +1,5 @@
 ---
-title: "01. IGate e intercambio de datos con APRS-IS"
+title: "IGate e intercambio de datos con APRS-IS"
 description: Función de IGate, direcciones de transferencia, q construct y mecanismos de entrega de tráfico APRS-IS independientes de los filtros.
 ---
 
