@@ -1,5 +1,5 @@
 ---
-title: "01. Informes meteorológicos APRS"
+title: "Informes meteorológicos APRS"
 description: "Informes WX: historia, formatos, campos obligatorios, mediciones no disponibles, metodología de medición y calidad de los datos CWOP/MADIS."
 ---
 

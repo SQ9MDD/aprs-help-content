@@ -1,5 +1,5 @@
 ---
-title: "01. Raporty pogodowe APRS"
+title: "Raporty pogodowe APRS"
 description: "Raporty WX: historia, formaty, wymagane pola, brakujące pomiary, metodyka pomiarów i jakość danych CWOP/MADIS."
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: "01. APRS Weather Reports"
+title: "APRS Weather Reports"
 description: "WX reports: history, formats, required fields, missing measurements, measurement methodology, and CWOP/MADIS data quality."
 ---
 
