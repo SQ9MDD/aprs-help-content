@@ -1,935 +1,109 @@
 ---
 title: Capas del protocolo APRS
-description: Explicación de la relación entre APRS, AX.25, la capa de radio, el módem y APRS-IS.
+description: División funcional de la transmisión APRS por radio y APRS-IS, y funciones de la aplicación, AX.25, el módem y el canal de radio.
 template: doc
 tableOfContents: true
 ---
 
-APRS no es un único protocolo que abarque todo, desde la señal de radio hasta la aplicación del usuario.
+APRS define cómo se representan e interpretan los datos intercambiados entre estaciones, pero no define toda la cadena de transmisión. En una red de radio típica utiliza tramas AX.25, un módem y un transceptor. En Internet, la información APRS se transmite en formato de texto mediante APRS-IS, utilizando TCP/IP.
 
-En la práctica, el sistema está formado por varias capas que trabajan juntas.
+Los siguientes diagramas muestran una **división práctica de funciones**, no una correspondencia formal con el modelo OSI. Cada función puede realizarse mediante equipos separados o integrarse en un único transceptor o programa informático.
 
-En la ruta de radio pueden representarse de forma simplificada así:
+## Transmisión por radio
 
-```text
-aplicación
-   |
-   v
-datos APRS
-   |
-   v
-AX.25
-   |
-   v
-módem / modulación
-   |
-   v
-radio
-   |
-   v
-RF
-```
+![División funcional de la transmisión APRS por radio](./_img/diagram01.png)
 
-Cada una de estas capas es responsable de algo diferente.
+En la transmisión VHF convencional, la información preparada por la aplicación se coloca en una trama AX.25. El módem convierte los datos digitales en una señal adecuada para la cadena de radio y el transceptor la transmite en la frecuencia seleccionada.
 
-APRS define principalmente **el significado de la información**.
+### Aplicación de usuario
 
-AX.25 proporciona la estructura de la trama utilizada para transportar esa información por radio.
+La aplicación crea la información destinada a transmitirse o interpreta los datos recibidos de otras estaciones. Puede gestionar informes de posición, mensajes, objetos, telemetría e información meteorológica. Puede ser un programa independiente o una función integrada en un transceptor o rastreador.
 
-El módem convierte los datos digitales en una señal que puede transmitirse a través del sistema de radio.
+### Datos APRS
 
-La radio transporta esa señal por el canal RF.
+APRS define los formatos de información y las reglas para interpretarlos. Especifica, entre otras cosas, cómo codificar un informe de posición, un mensaje o datos de telemetría, y cómo identificar el tipo de información.
 
-En el lado de Internet, la misma información APRS puede transportarse de otra forma:
+En una trama APRS típica, los datos principales se encuentran en el campo *Information* de la trama AX.25. Esto no significa que los demás campos carezcan de importancia para APRS. El protocolo también utiliza determinados elementos del direccionamiento AX.25, y el formato Mic-E codifica parte de la información en el campo de dirección de destino.
 
-```text
-datos APRS
-   |
-   v
-APRS-IS
-   |
-   v
-TCP/IP
-   |
-   v
-aplicaciones
-```
+Por tanto, APRS y AX.25 cumplen funciones diferentes pero complementarias: AX.25 define la estructura de la trama de radio, mientras que APRS define cómo se representa e interpreta la información transportada y cómo se utilizan determinados campos de esa trama.
 
-Comprender esta división es muy importante porque muchos elementos visibles en un paquete APRS típico pertenecen en realidad a diferentes capas del sistema.
+### AX.25
 
-## APRS no es todo a la vez
+AX.25 es un protocolo de la capa de enlace de datos utilizado en packet radio. Define una trama que contiene, entre otros elementos, direcciones de origen y destino, una lista opcional de direcciones de digipeaters, un campo de control, un identificador de protocolo (PID), un campo *Information* y una secuencia de verificación de trama (FCS).
 
-En el lenguaje cotidiano, la palabra "APRS" se utiliza a menudo para describir todo el sistema:
+El tráfico APRS habitual utiliza tramas **UI** (*Unnumbered Information*), que no requieren establecer previamente una conexión AX.25. Así, una sola transmisión puede ser recibida por varias estaciones dentro del alcance. Sin embargo, transmitir una trama UI no garantiza la confirmación de su recepción. Las posibles confirmaciones de mensajes APRS constituyen un mecanismo independiente.
 
-- radio,
-- modulación,
-- tramas AX.25,
-- posiciones y mensajes,
-- digipeaters,
-- IGates,
-- APRS-IS,
-- aplicaciones de Internet.
+### Módem y modulación
 
-Es cómodo, pero técnicamente impreciso.
+El módem convierte los datos digitales en una señal adecuada para la cadena de transmisión y recepción, y realiza la operación inversa al recibir. En el APRS VHF convencional se utiliza habitualmente **AFSK 1200**, basado en Bell 202, con una velocidad de 1200 bit/s y tonos de audio de 1200 y 2200 Hz.
 
-Por ejemplo, la transmisión:
+El módem puede ser un dispositivo independiente, formar parte de un TNC, estar integrado en un transceptor o ser un programa que utiliza una tarjeta de sonido. AFSK es una forma de transmitir tramas, no un formato de datos APRS.
+
+### Radio y canal RF
+
+El transceptor transmite y recibe la señal de radio. El canal RF es un medio compartido por las estaciones que operan en una frecuencia determinada. La eficacia de la transmisión depende, entre otros factores, de las antenas, la potencia de transmisión, la propagación, las interferencias y la ocupación del canal.
+
+En las redes APRS VHF europeas se utiliza habitualmente la frecuencia **144,800 MHz**, pero ni esta frecuencia ni AFSK 1200 definen el propio APRS. La información APRS también puede transmitirse mediante otros métodos y en otras bandas.
+
+## Cómo colaboran las capas: ejemplo de paquete
+
+En registros y aplicaciones, un paquete APRS suele mostrarse mediante una representación de texto legible:
 
 ```text
 SQ9MDD-7>APRS,WIDE1-1:!5012.34N/01956.78E>
 ```
 
-contiene elementos que pertenecen a diferentes capas.
+En esta representación:
 
-De forma muy simplificada:
+| Elemento | Significado |
+| --- | --- |
+| `SQ9MDD-7` | Dirección de origen AX.25. |
+| `APRS` | Dirección de destino AX.25, utilizada aquí según las convenciones APRS y no como dirección de un destinatario concreto. |
+| `WIDE1-1` | Elemento de la ruta de digipeaters almacenada en los campos de dirección AX.25. |
+| `:` | Separador entre la cabecera y el campo de información en la representación de texto. |
+| `!5012.34N/01956.78E>` | Contenido del campo *Information*: un informe de posición APRS sin comprimir. El signo `!` es el identificador de tipo de datos y el `>` final indica el símbolo de la estación. |
 
-```text
-SQ9MDD-7      origen AX.25
-APRS          destination AX.25
-WIDE1-1       ruta AX.25
-!             identificador de tipo de datos APRS
-5012.34N...   datos APRS
-```
+Este ejemplo muestra por qué no debe confundirse toda la representación visible con el campo de datos APRS. La cabecera utiliza campos AX.25 a los que APRS puede asignar un significado adicional, mientras que el campo *Information* contiene datos codificados en formato APRS.
 
-Además, una trama de radio real contiene información que no aparece en esta representación textual.
+**La representación de texto no es una copia literal de la trama transmitida por radio.** La trama AX.25 real contiene además campos codificados en binario que no aparecen arriba, incluidos el campo de control, el PID y el FCS. El separador `:` pertenece a la representación de texto, no a la estructura de la trama de radio.
 
-## Modelo simplificado de capas
+La estructura de la trama se explica con más detalle en [«Anatomía de un paquete APRS»](../03-packet-anatomy/).
 
-Para APRS en un canal de radio puede utilizarse el siguiente modelo:
+## Transmisión por Internet
 
-```text
-+-----------------------------+
-| aplicación de usuario       |
-+-----------------------------+
-| datos APRS                  |
-+-----------------------------+
-| AX.25 UI                    |
-+-----------------------------+
-| módem / modulación          |
-+-----------------------------+
-| radio                       |
-+-----------------------------+
-| canal RF                    |
-+-----------------------------+
-```
+![División funcional de la transmisión APRS por Internet](./_img/diagram02.png)
 
-No se trata de un modelo OSI formal del protocolo APRS.
+En Internet, la aplicación sigue creando o leyendo información APRS, pero su transmisión no necesita un módem de radio ni una trama AX.25 en la forma transmitida por RF. El cliente se comunica con los servidores **APRS-IS** mediante una conexión **TCP/IP**.
 
-Es una forma práctica de mostrar dónde se encuentran los distintos elementos del sistema y de qué son responsables.
+APRS-IS utiliza una representación de texto de los paquetes que incluye la cabecera y el campo de información. Los servidores APRS-IS reciben paquetes y los distribuyen a los clientes conectados correspondientes según las reglas de funcionamiento de la red, incluidos los filtros aplicados.
 
-## La capa de radio
+**APRS-IS no es un túnel de Internet que transporte tramas AX.25 sin procesar.** Permite distribuir la información APRS mediante otro mecanismo de transmisión. Los servidores APRS-IS son componentes de infraestructura, no una capa independiente del modelo OSI.
 
-En el nivel más bajo se encuentra la transmisión física por radio.
+## IGate: conexión entre ambos entornos
 
-Aquí importan, entre otros, los siguientes factores:
+Un IGate conecta la red de radio con APRS-IS. Tras recibir un paquete por RF, puede reenviarlo a la red de Internet en la representación de texto adecuada. Durante ese proceso se puede añadir información específica de APRS-IS, por ejemplo, un *q-construct*. Esto no significa que estuviera presente en la trama original transmitida por la estación de radio.
 
-- frecuencia de trabajo,
-- ancho de canal,
-- potencia del transmisor,
-- antena,
-- propagación,
-- nivel de señal,
-- interferencias,
-- uso compartido del canal por muchas estaciones.
+El tráfico en sentido contrario está sujeto a reglas diferentes. Un IGate no debe tratar cualquier paquete recibido de APRS-IS como si fuera una trama lista para transmitirse directamente por RF. Las reglas detalladas de reenvío, incluido el uso del formato *third-party traffic*, corresponden a la descripción del funcionamiento de los IGate.
 
-En las redes APRS VHF europeas se utiliza muy frecuentemente la frecuencia:
+Esta distinción permite entender por qué un paquete visible en APRS-IS puede contener elementos adicionales que no estaban presentes en su transmisión por radio.
 
-```text
-144.800 MHz
-```
+## Resumen
 
-Sin embargo, la frecuencia en sí no forma parte del protocolo APRS.
+| Elemento | Función principal |
+| --- | --- |
+| Aplicación | Creación, recepción y presentación de información. |
+| APRS | Formato e interpretación de la información, incluido el uso de determinados campos de dirección. |
+| AX.25 | Estructura de la trama de radio, direccionamiento, ruta y detección de errores. |
+| Módem | Conversión de datos digitales a la señal utilizada por un método de transmisión determinado y viceversa. |
+| Radio y canal RF | Transmisión física de la señal entre estaciones. |
+| APRS-IS | Intercambio y distribución por Internet de paquetes en representación de texto. |
+| TCP/IP | Transporte de datos entre clientes y servidores APRS-IS. |
+| IGate | Reenvío controlado de paquetes entre la red de radio y APRS-IS. |
 
-APRS también puede transportarse en otras bandas y utilizando otros métodos de transmisión.
+La distinción fundamental está entre el **significado de la información** y **la forma en que se transporta**. APRS define el significado de los datos utilizando determinados mecanismos de AX.25. Por radio, la información se transporta en tramas AX.25; en APRS-IS, se distribuye en representación de texto mediante TCP/IP.
 
-Por tanto, la frecuencia pertenece a la capa de radio, no a la estructura de datos APRS.
+## Fuentes
 
-## Módem y modulación
-
-Los datos digitales deben convertirse en una señal que pueda transmitirse por radio.
-
-En APRS clásico sobre VHF se utiliza muy frecuentemente:
-
-```text
-1200 baud AFSK
-```
-
-con modulación basada en el estándar Bell 202.
-
-Una implementación típica utiliza dos tonos de audio:
-
-```text
-1200 Hz
-2200 Hz
-```
-
-Los datos digitales se convierten en la secuencia correspondiente de señales de audio, que después modulan el transmisor de radio.
-
-En el lado receptor, el proceso funciona en sentido inverso.
-
-```text
-RF
- |
- v
-radio
- |
- v
-audio
- |
- v
-módem
- |
- v
-datos digitales
-```
-
-El módem puede ser:
-
-- un dispositivo de hardware,
-- parte de un equipo de radio,
-- un TNC,
-- software ejecutándose en un ordenador.
-
-Dire Wolf es un ejemplo de módem por software.
-
-Sin embargo, conviene recordar que:
-
-**AFSK a 1200 baudios no es APRS.**
-
-Es solo una de las formas de transportar los datos utilizados por APRS.
-
-## AX.25
-
-Por encima de la capa del módem se encuentra **AX.25**.
-
-AX.25 es un protocolo de capa de enlace de datos utilizado en packet radio.
-
-AX.25 define la estructura de la trama de radio, incluyendo, entre otras cosas:
-
-- dirección destination,
-- dirección source,
-- direcciones opcionales de digipeaters,
-- campo control,
-- campo PID,
-- campo information,
-- comprobación de errores de la trama.
-
-De forma simplificada:
-
-```text
-+-------------+
-| Destination |
-+-------------+
-| Source      |
-+-------------+
-| Digipeaters |
-+-------------+
-| Control     |
-+-------------+
-| PID         |
-+-------------+
-| Information |
-+-------------+
-| FCS         |
-+-------------+
-```
-
-APRS no crea desde cero su propia estructura completa de trama de radio.
-
-En su lugar, utiliza AX.25 como mecanismo de transporte de datos.
-
-## AX.25 UI
-
-El tráfico APRS típico utiliza tramas AX.25 de tipo **UI**, donde UI significa:
-
-**Unnumbered Information**
-
-Este acrónimo no debe confundirse con *User Interface*.
-
-Las tramas UI permiten enviar información sin establecer previamente una conexión AX.25 clásica.
-
-Gracias a ello, una estación puede simplemente transmitir información como:
-
-```text
-posición
-estado
-objeto
-meteorología
-telemetría
-```
-
-y todas las estaciones que se encuentren dentro del alcance pueden recibirla.
-
-Esto encaja muy bien con el carácter de difusión de APRS.
-
-## ¿Dónde empieza realmente APRS?
-
-En una trama APRS típica, los datos APRS propiamente dichos se encuentran en el campo **Information** de la trama AX.25.
-
-Puede representarse así:
-
-```text
-AX.25
-+------------------------------------------+
-| direcciones | control | PID | Information |
-+------------------------------------------+
-                              |
-                              v
-                         datos APRS
-```
-
-El contenido de este campo define, entre otras cosas:
-
-- posición,
-- estado,
-- mensaje,
-- objeto,
-- meteorología,
-- telemetría,
-- consulta,
-- otros tipos de información APRS.
-
-El primer carácter del campo de información suele actuar como **Data Type Identifier**, o DTI.
-
-Por ejemplo:
-
-```text
-!
-=
-/
-@
-:
-;
->
-?
-```
-
-pueden indicar distintos tipos de datos.
-
-El significado detallado de cada DTI se describe en una sección independiente de la documentación.
-
-## Ejemplo de división de un paquete
-
-Consideremos el paquete:
-
-```text
-SQ9MDD-7>APRS,WIDE1-1:!5012.34N/01956.78E>
-```
-
-Podemos dividirlo lógicamente de la siguiente manera:
-
-```text
-SQ9MDD-7
-```
-
-es la dirección de origen AX.25.
-
-```text
-APRS
-```
-
-es la dirección destination AX.25.
-
-```text
-WIDE1-1
-```
-
-es un elemento de la ruta AX.25.
-
-```text
-:
-```
-
-separa en la representación textual la cabecera del campo de información.
-
-```text
-!
-```
-
-es un Data Type Identifier de APRS.
-
-```text
-5012.34N/01956.78E>
-```
-
-es el contenido APRS propiamente dicho que describe la posición y el símbolo.
-
-Por tanto, se ve claramente que no todos los elementos visibles del paquete pertenecen a la misma capa.
-
-## Destination address
-
-El campo destination forma parte de la cabecera AX.25.
-
-En el uso clásico de AX.25, destination puede indicar la estación de destino.
-
-En APRS, la situación es más compleja.
-
-Muchos paquetes APRS utilizan la dirección destination para identificar el tipo de dispositivo o software.
-
-Ejemplo:
-
-```text
-SQ9MDD-7>APRS:...
-```
-
-Esto no significa que el paquete esté dirigido a una estación con el indicativo `APRS`.
-
-Del mismo modo, destination puede contener valores pertenecientes al sistema TOCALL.
-
-Por eso, la dirección destination en APRS no debe interpretarse automáticamente como la dirección de un destinatario concreto.
-
-Las reglas detalladas sobre destination address y TOCALL se describen por separado.
-
-## El destinatario de un mensaje APRS
-
-Esta distinción es especialmente importante en los mensajes.
-
-Por ejemplo, un paquete puede tener este aspecto:
-
-```text
-SQ9MDD-7>APRS,WIDE1-1::SP9XYZ   :Test
-```
-
-El destination AX.25 puede seguir siendo:
-
-```text
-APRS
-```
-
-mientras que el destinatario real del mensaje APRS:
-
-```text
-SP9XYZ
-```
-
-se encuentra dentro del campo de información APRS.
-
-Se trata de dos capas diferentes de direccionamiento.
-
-## Ruta de digipeaters
-
-Elementos como:
-
-```text
-WIDE1-1
-WIDE2-1
-```
-
-no forman parte del payload APRS propiamente dicho.
-
-Pertenecen a la lista de direcciones de digipeaters de la trama AX.25.
-
-Esta capa permite a los digipeaters determinar si una trama puede retransmitirse y de qué manera.
-
-En la representación textual lo vemos como:
-
-```text
-SOURCE>DEST,PATH:DATA
-```
-
-pero lógicamente:
-
-```text
-SOURCE
-DEST
-PATH
-```
-
-pertenecen a la cabecera AX.25,
-
-mientras que:
-
-```text
-DATA
-```
-
-es el campo de información que contiene APRS.
-
-## La representación textual no es la trama de radio sin procesar
-
-Los paquetes APRS se muestran muy a menudo como texto:
-
-```text
-SOURCE>DEST,PATH:information
-```
-
-Es una representación extremadamente cómoda para usuarios, registros y aplicaciones.
-
-Sin embargo, no es un registro exacto, byte por byte, de lo que se encuentra en el canal de radio.
-
-Una trama AX.25 real contiene elementos que no son visibles directamente en la representación textual, entre ellos:
-
-- direcciones AX.25 codificadas,
-- bits de control,
-- campo control,
-- PID,
-- FCS,
-- mecanismos relacionados con la transmisión de la trama.
-
-Por tanto:
-
-```text
-SQ9MDD-7>APRS,WIDE1-1:...
-```
-
-debe considerarse una representación legible del paquete, no el contenido literal de la transmisión de radio.
-
-## APRS-IS
-
-En el lado de Internet, los paquetes APRS no se transmiten como tramas de radio AX.25 sin procesar.
-
-APRS-IS utiliza una representación textual de los paquetes similar a:
-
-```text
-SOURCE>DEST,PATH:information
-```
-
-Por tanto, un paquete puede ser recibido por un IGate a través de RF:
-
-```text
-AX.25
-   |
-   v
-IGate
-```
-
-y después enviado a APRS-IS como representación textual:
-
-```text
-SOURCE>DEST,PATH:information
-```
-
-Al paquete pueden añadirse informaciones características de APRS-IS.
-
-Un ejemplo son los **q-constructs**.
-
-## Los q-constructs no forman parte de la ruta de radio
-
-En APRS-IS puede verse un paquete como:
-
-```text
-SQ9MDD-7>APRS,WIDE1-1,qAR,SQ9MDD-4:...
-```
-
-El elemento:
-
-```text
-qAR
-```
-
-no fue transmitido por radio por la estación como otro elemento de la ruta normal de digipeaters.
-
-Es información añadida en el entorno APRS-IS.
-
-Del mismo modo:
-
-```text
-SQ9MDD-4
-```
-
-en esta parte puede identificar el IGate responsable de enviar el paquete a APRS-IS.
-
-Por tanto, no debe interpretarse toda la ruta visible en APRS-IS como una copia exacta de la ruta presente en RF.
-
-## RF y APRS-IS son entornos de transporte diferentes
-
-La misma información APRS puede transportarse por diferentes caminos.
-
-En RF:
-
-```text
-datos APRS
-   |
-   v
-AX.25
-   |
-   v
-módem
-   |
-   v
-radio
-```
-
-En Internet:
-
-```text
-datos APRS
-   |
-   v
-APRS-IS
-   |
-   v
-TCP/IP
-```
-
-En ambos casos, el significado de la información APRS puede seguir siendo el mismo.
-
-Lo que cambia es el método de transporte.
-
-Esta distinción es importante.
-
-**APRS es una capa de información, mientras que RF y APRS-IS son entornos diferentes por los que esa información puede transportarse.**
-
-## El IGate como frontera entre entornos
-
-Un IGate se encuentra entre la red de radio y APRS-IS.
-
-En dirección RF -> Internet:
-
-```text
-RF
- |
- v
-AX.25
- |
- v
-IGate
- |
- v
-APRS-IS
-```
-
-El IGate recibe la trama de radio, interpreta los elementos necesarios y envía a APRS-IS la representación adecuada del paquete.
-
-Esquemáticamente:
-
-```text
-[RF / AX.25]
-      |
-      v
-    IGate
-      |
-      v
- [APRS-IS]
-```
-
-Sin embargo, no se trata simplemente de reenviar bits de una interfaz a otra.
-
-El IGate trabaja en la frontera entre dos entornos de transporte diferentes.
-
-## Dirección APRS-IS -> RF
-
-El paso en la dirección contraria es más complejo.
-
-No se puede simplemente tomar cualquier línea de texto de APRS-IS y transmitirla sin cambios por radio.
-
-APRS dispone de mecanismos que determinan cómo transferir determinada información desde APRS-IS hacia RF.
-
-En particular, puede utilizarse el formato:
-
-**third-party traffic**
-
-Permite conservar información sobre el origen del paquete original.
-
-Las reglas detalladas de este mecanismo se describen en las secciones dedicadas a formatos especiales y al funcionamiento de los IGates.
-
-## Third-party traffic
-
-El mecanismo third-party traffic crea una capa adicional de encapsulación.
-
-De forma muy simplificada:
-
-```text
-AX.25
- |
- v
-paquete APRS third-party
- |
- v
-paquete original
-```
-
-Esto significa que un paquete procedente de otro entorno no se copia simplemente como un paquete RF normal.
-
-Se coloca dentro de un formato APRS especial.
-
-Gracias a ello, el receptor puede reconocer que la información fue reenviada por otro elemento de la infraestructura.
-
-## ¿Qué pertenece a cada capa?
-
-La siguiente tabla muestra varios elementos APRS habituales y su lugar dentro del sistema.
-
-| Elemento | Capa |
-|---|---|
-| `144.800 MHz` | radio / RF |
-| `1200 baud` | módem / transmisión |
-| AFSK | modulación |
-| Bell 202 | modulación |
-| AX.25 | capa de enlace de datos |
-| Source callsign | AX.25 |
-| Destination address | AX.25 |
-| `WIDE1-1` | ruta AX.25 |
-| `WIDE2-1` | ruta AX.25 |
-| UI | tipo de trama AX.25 |
-| PID | AX.25 |
-| FCS | AX.25 |
-| `!` | APRS DTI |
-| `=` | APRS DTI |
-| `:` | APRS message DTI |
-| posición | APRS |
-| objeto | APRS |
-| mensaje | APRS |
-| telemetría | APRS |
-| meteorología | APRS |
-| TOCALL | uso de destination por APRS |
-| APRS-IS | transporte de APRS por Internet |
-| `qAR` | APRS-IS |
-| TCP/IP | transporte por Internet |
-| APRS.fi | aplicación / servicio |
-
-Esta separación ayuda a comprender por qué algunos elementos del paquete aparecen únicamente en RF, otros únicamente en APRS-IS y otros conservan su significado en ambos entornos.
-
-## Los mismos datos, transportes diferentes
-
-Supongamos que la información APRS propiamente dicha describe la posición de una estación.
-
-En RF puede transportarse así:
-
-```text
-posición APRS
-     |
-     v
-   AX.25
-     |
-     v
-   AFSK
-     |
-     v
-    RF
-```
-
-Después de pasar por un IGate:
-
-```text
-posición APRS
-     |
-     v
-  APRS-IS
-     |
-     v
-   TCP/IP
-```
-
-El significado de la posición no tiene por qué cambiar.
-
-Solo cambia el mecanismo utilizado para transportar la información.
-
-## La aplicación está todavía más arriba
-
-Al final se encuentra la aplicación del usuario.
-
-Puede ser:
-
-- un equipo de radio con decodificador APRS,
-- un terminal APRS,
-- una aplicación de ordenador,
-- un mapa,
-- un servicio de Internet,
-- un sistema de monitorización,
-- una base de datos.
-
-La aplicación interpreta la información APRS y la presenta al usuario.
-
-Por ejemplo:
-
-```text
-RF
- |
- v
-AX.25
- |
- v
-APRS
- |
- v
-aplicación
- |
- v
-mapa
-```
-
-o:
-
-```text
-APRS-IS
-   |
-   v
-aplicación
-   |
-   v
-mapa
-```
-
-Por tanto, el mapa es la capa final de presentación de la información, no el protocolo APRS en sí.
-
-## Errores frecuentes
-
-### APRS y AX.25 son lo mismo
-
-No.
-
-AX.25 proporciona, entre otras cosas, la estructura de la trama y el direccionamiento de la capa de enlace.
-
-APRS utiliza AX.25 para transportar sus propios datos.
-
-### AFSK a 1200 baudios es APRS
-
-No.
-
-AFSK a 1200 baudios es uno de los métodos de transmisión de datos.
-
-APRS se encuentra por encima.
-
-### WIDE1-1 forma parte de los datos APRS
-
-No.
-
-`WIDE1-1` se encuentra en la ruta de direcciones AX.25.
-
-### Destination address siempre indica el destinatario APRS
-
-No.
-
-En APRS, destination también puede utilizarse para identificar un dispositivo o software.
-
-### qAR forma parte de la ruta de radio
-
-No.
-
-`qAR` es un elemento relacionado con APRS-IS.
-
-### Una línea de texto de un paquete es la trama de radio exacta
-
-No.
-
-```text
-SOURCE>DEST,PATH:DATA
-```
-
-es una representación legible de la información contenida en la trama, pero no incluye todos los elementos de la transmisión AX.25 real.
-
-### APRS-IS es una versión de AX.25 para Internet
-
-No directamente.
-
-APRS-IS transporta información APRS en un entorno de Internet utilizando su propio método de representación y distribución de paquetes.
-
-## La imagen completa
-
-Las capas de la transmisión por radio pueden resumirse así:
-
-```text
-+-----------------------------+
-| Aplicación                  |
-+-----------------------------+
-| APRS                        |
-| posiciones, mensajes,       |
-| objetos, meteorología,      |
-| telemetría                  |
-+-----------------------------+
-| AX.25 UI                    |
-| direcciones, path, control, |
-| PID                         |
-+-----------------------------+
-| módem / modulación          |
-| p. ej. AFSK 1200            |
-+-----------------------------+
-| radio                       |
-+-----------------------------+
-| RF                          |
-+-----------------------------+
-```
-
-En el lado de APRS-IS:
-
-```text
-+-----------------------------+
-| Aplicación                  |
-+-----------------------------+
-| APRS                        |
-+-----------------------------+
-| APRS-IS                     |
-+-----------------------------+
-| TCP/IP                      |
-+-----------------------------+
-| red de Internet             |
-+-----------------------------+
-```
-
-Un IGate puede funcionar entre estos entornos:
-
-```text
-             RF                         Internet
-
-+--------------------------+       +----------------------+
-| APRS                     |       | APRS                 |
-+--------------------------+       +----------------------+
-| AX.25                    |       | APRS-IS              |
-+--------------------------+       +----------------------+
-| módem                    |       | TCP/IP               |
-+--------------------------+       +----------------------+
-| radio                    |       | Internet             |
-+--------------------------+       +----------------------+
-             \                         /
-              \                       /
-               +-------- IGate ------+
-```
-
-## Puntos clave para recordar
-
-**APRS no define toda la transmisión de radio.**
-
-Utiliza otras capas, especialmente AX.25.
-
-**AX.25 y APRS no son lo mismo.**
-
-AX.25 transporta datos, mientras que APRS define el significado de la información contenida en el campo de datos.
-
-**AFSK a 1200 baudios no es APRS.**
-
-Es una forma de transportar tramas AX.25 por radio.
-
-**WIDE1-1 y elementos similares pertenecen a la ruta AX.25.**
-
-No forman parte del payload APRS propiamente dicho.
-
-**Destination address es un elemento AX.25.**
-
-APRS puede utilizarlo adicionalmente para identificar un dispositivo o una implementación de software.
-
-**APRS-IS es un entorno de transporte diferente para la información APRS.**
-
-No transmite tramas de radio sin procesar 1:1.
-
-**Los q-constructs pertenecen a APRS-IS.**
-
-No deben interpretarse como elementos normales de la ruta de radio.
-
-**La representación textual de un paquete combina información de varias capas en una sola línea.**
-
-Por tanto:
-
-```text
-SOURCE>DEST,PATH:DATA
-```
-
-es una representación muy cómoda para personas y aplicaciones, pero no es una imagen literal de toda la transmisión de radio.
-
-## A continuación
-
-Después de comprender las capas del sistema, se puede pasar a un análisis más detallado de un paquete individual.
-
-Los siguientes temas deberían incluir:
-
-- estructura de una trama AX.25,
-- anatomía de la representación textual de un paquete APRS,
-- source callsign y SSID,
-- destination address,
-- TOCALL,
-- rutas de digipeaters,
-- campo de información APRS,
-- Data Type Identifier,
-- diferencias entre un paquete RF y su representación en APRS-IS,
-- q-constructs,
-- third-party traffic.
-
-Con esta base, los siguientes elementos del protocolo pueden analizarse sabiendo claramente **a qué capa del sistema pertenecen realmente**.
+- [*APRS Protocol Reference*, versión 1.0.1](https://www.aprs.org/doc/APRS101.PDF), capítulos 3–5: utilización de AX.25 y formatos de datos APRS.
+- [*AX.25 Link Access Protocol for Amateur Packet Radio*, versión 2.2](https://tarpn.net/t/faq/files/AX25.2.2-Sep%2017-1-10Sep17.pdf): estructura de la trama y tramas UI.
+- [*Connecting to APRS-IS*](https://www.aprs-is.net/connecting.aspx) y [*Server Design*](https://www.aprs-is.net/ServerDesign.aspx): conexiones de clientes, representación de texto y distribución de paquetes.
