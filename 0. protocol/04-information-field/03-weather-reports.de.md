@@ -277,6 +277,108 @@ Das klassische Wetterstationssymbol ist `/_`; die alternative Symboltabelle erm�
 
 Das bedeutet nicht, dass jedes Paket mit dem Zeichen `_` ein WX-Bericht ist. In einem Positionsbericht muss der Symbolcode an seiner vorgesehenen Stelle erkannt und die Syntax der nachfolgenden Daten geprüft werden. In einem Bericht ohne Position erfüllt `_` eine andere Funktion: Es ist das erste Byte des Information-Feldes und damit der DTI.
 
+## Struktur eines vollständigen WX-Berichts
+
+Die folgende Tabelle beschreibt einen unkomprimierten Wetterbericht mit
+Position. Sie berücksichtigt das grundlegende APRS-Format, zusätzliche
+Felder und spätere Erweiterungsvorschläge.
+
+| Feld | Erforderlich | Bedeutung | Einheit / Kodierung |
+|---|---|---|---|
+| `!` | Ja | DTI eines Positionsberichts | Alternativ `=`, `/`, `@` |
+| `5215.01N` | Ja | Geografische Breite | DDMM.mmN/S |
+| `/` | Ja | Symboltabelle | `/` oder `\` |
+| `02055.58E` | Ja | Geografische Länge | DDDMM.mmE/W |
+| `_` | Ja | Wetterstationssymbol | WX |
+| `220` | Ja | Windrichtung | 000-360°, nicht verfügbar: `...` |
+| `/` | Ja | Trennzeichen | Festes Zeichen |
+| `004` | Ja | Mittlere Windgeschwindigkeit über 1 Minute | mph, nicht verfügbar: `...` |
+| `g005` | Empfohlen* | Maximaler Windstoß der letzten 5 Minuten | mph, nicht verfügbar: `g...` |
+| `t030` | Ja | Lufttemperatur | °F, nicht verfügbar: `t...` |
+| `r000` | Nein | Niederschlag der letzten Stunde | 0,01 Zoll |
+| `p000` | Nein | Niederschlag der letzten 24 Stunden | 0,01 Zoll |
+| `P000` | Nein | Niederschlag seit Mitternacht | 0,01 Zoll |
+| `h00` | Nein | Relative Luftfeuchtigkeit | %, `00` = 100 % |
+| `b10218` | Nein | Luftdruck | 0,1 hPa, `10218` = 1021,8 hPa |
+| `L840` | Nein | Sonneneinstrahlung | 0-999 W/m² |
+| `l123` | Nein | Sonneneinstrahlung | 1000-1999 W/m², hier 1123 W/m² |
+| `s002` | Nein | Schneefall der letzten 24 Stunden | Zoll |
+| `#123` | Nein | Rohzähler des Regenmessers | Impulse; geräteabhängig |
+| `F+123` | Nein | Wasserstand relativ zu einem Referenzniveau | 0,1 Fuß, hier +12,3 Fuß |
+| `fxxxx` | Nein | Historischer Vorschlag für den Wasserstand | Meter, durch `F` ersetzt |
+| `V128` | Nein | Versorgungsspannung | 0,1 V, hier 12,8 V |
+| `X123` | Nein | Strahlendosisleistung | nSv/h, `12 × 10³` = 12 µSv/h |
+| `Zxx` | Nein | Gerätetypcode | APRS-1.2-Vorschlag |
+| `wRSW` | Nein | Kennung von WX-Software und -Gerät | Historisches APRS101-Beispiel |
+
+*In einem vollständigen Bericht kann `gxxx` laut späteren Klarstellungen
+weggelassen werden. Für die Kompatibilität mit älterer Software wird seine
+Angabe dennoch empfohlen.*
+
+`L` und `l` sind Alternativen. Ebenso sollten `F` und das historische `f`
+nicht gleichzeitig verwendet werden.
+
+`F`, `V`, `X` und `Z` stammen aus späteren Vorschlägen zur
+Protokollerweiterung. Ihre Unterstützung ist nicht garantiert.
+
+Erforderliche Felder müssen auch dann vorhanden sein, wenn ein Messwert
+nicht verfügbar ist. In diesem Fall werden Punkte verwendet. Optionale
+Felder ohne verfügbaren Messwert können weggelassen werden.
+
+### Beispiele für Berichte
+
+**1. Minimaler Bericht, nur Temperatur**
+
+```text
+!5215.01N/02055.58E_.../...g...t030
+```
+
+Temperatur 30°F. Keine Messwerte für Wind oder Windstöße.
+
+**2. Temperatur und Wind**
+
+```text
+!5215.01N/02055.58E_220/004g005t068
+```
+
+Wind aus 220°, mittlere Geschwindigkeit 4 mph, Windstöße 5 mph,
+Temperatur 68°F (20°C).
+
+**3. Temperatur, Luftfeuchtigkeit und Luftdruck**
+
+```text
+!5215.01N/02055.58E_.../...g...t068h72b10132
+```
+
+Temperatur 20°C, Luftfeuchtigkeit 72 % und Luftdruck 1013,2 hPa. Keine
+Winddaten.
+
+**4. Typischer vollständiger Wetterbericht**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840
+```
+
+Der Bericht enthält Wind, Windstöße, Temperatur, drei
+Niederschlagsmessungen, Luftfeuchtigkeit, Luftdruck und Sonneneinstrahlung.
+
+**5. Maximalbeispiel mit allen verfügbaren Feldern**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840s002#123F+123V128X123Z00wRSW
+```
+
+Dieses Demonstrationsbeispiel enthält auch historische Felder und
+vorgeschlagene Erweiterungen. Der Code `Z00` veranschaulicht die Syntax;
+er ist keine Empfehlung für die Wahl eines Gerätetyps.
+
+Länge des Information-Feldes: **88 Byte**.
+
+Die Grenze für das Information-Feld in APRS/AX.25 beträgt **256 Byte**.
+
+Das Beispiel bleibt innerhalb dieser Grenze; es sollten jedoch nicht ohne
+Bedarf alle verfügbaren Felder übertragen werden.
+
 ## CWOP: von APRS-Stationen zur professionellen Wetterbeobachtung
 
 Das WX-Format wird auch außerhalb von Amateurfunknetzen eingesetzt. Ein Beispiel ist das **Citizen Weather Observer Program (CWOP)**, das aus APRSWXNET und dem Amateurfunkumfeld hervorging. Das Programm ermöglicht es Freiwilligen, Messwerte ihrer privaten Wetterstationen in einen gemeinsamen meteorologischen Datenbestand einzubringen. Teilnehmen können sowohl Funkamateure als auch Beobachter, die ihre Berichte ohne Funkübertragung direkt über das Internet einspeisen.

@@ -277,6 +277,112 @@ Klasyczny symbol stacji pogodowej to `/_`, a tabela alternatywna pozwala użyć 
 
 Nie oznacza to, że każdy pakiet zawierający znak `_` jest raportem WX. W raporcie z pozycją należy rozpoznać kod symbolu w odpowiednim miejscu i zweryfikować składnię następujących po nim danych. W raporcie bez pozycji `_` pełni inną funkcję: jest pierwszym bajtem pola Information, czyli DTI.
 
+
+## Struktura kompletnego raportu WX
+
+Poniższa tabela opisuje nieskompresowany raport pogodowy
+z pozycją, uwzględniając podstawowy format APRS, pola
+dodatkowe oraz późniejsze propozycje rozszerzeń.
+
+| Pole | Wymagane | Znaczenie | Jednostka / kodowanie |
+|---|---|---|---|
+| `!` | Tak | DTI raportu pozycji | Alternatywnie `=`, `/`, `@` |
+| `5215.01N` | Tak | Szerokość geograficzna | DDMM.mmN/S |
+| `/` | Tak | Tabela symboli | `/` lub `\` |
+| `02055.58E` | Tak | Długość geograficzna | DDDMM.mmE/W |
+| `_` | Tak | Symbol stacji pogodowej | WX |
+| `220` | Tak | Kierunek, z którego wieje wiatr | 000-360°, brak: `...` |
+| `/` | Tak | Separator | Stały znak |
+| `004` | Tak | Średnia prędkość wiatru z 1 minuty | mph, brak: `...` |
+| `g005` | Zalecane* | Maksymalny poryw z ostatnich 5 minut | mph, brak: `g...` |
+| `t030` | Tak | Temperatura powietrza | °F, brak: `t...` |
+| `r000` | Nie | Opad z ostatniej godziny | 0,01 cala |
+| `p000` | Nie | Opad z ostatnich 24 godzin | 0,01 cala |
+| `P000` | Nie | Opad od północy | 0,01 cala |
+| `h00` | Nie | Wilgotność względna | %, `00` = 100% |
+| `b10218` | Nie | Ciśnienie atmosferyczne | 0,1 hPa, `10218` = 1021,8 hPa |
+| `L840` | Nie | Promieniowanie słoneczne | 0-999 W/m² |
+| `l123` | Nie | Promieniowanie słoneczne | 1000-1999 W/m², tutaj 1123 W/m² |
+| `s002` | Nie | Opad śniegu z ostatnich 24 godzin | cale |
+| `#123` | Nie | Surowy licznik opadów | Impulsy, zależne od urządzenia |
+| `F+123` | Nie | Poziom wody względem poziomu odniesienia | 0,1 stopy, tutaj +12,3 stopy |
+| `fxxxx` | Nie | Historyczna propozycja poziomu wody | Metry, zastąpiona przez `F` |
+| `V128` | Nie | Napięcie zasilania | 0,1 V, tutaj 12,8 V |
+| `X123` | Nie | Moc dawki promieniowania | nSv/h, `12 × 10³` = 12 µSv/h |
+| `Zxx` | Nie | Kod typu urządzenia | Propozycja APRS 1.2 |
+| `wRSW` | Nie | Identyfikator oprogramowania i urządzenia WX | Historyczny przykład APRS101 |
+
+*W kompletnym raporcie `gxxx` może być pominięte według
+późniejszych wyjaśnień. Jego obecność jest jednak
+zalecana dla zgodności ze starszym oprogramowaniem.*
+
+Pola `L` i `l` są alternatywne. Podobnie nie należy
+jednocześnie stosować `F` i historycznego `f`.
+
+Pola `F`, `V`, `X` i `Z` pochodzą z późniejszych propozycji
+rozszerzenia protokołu. Ich obsługa nie jest gwarantowana.
+
+Pola wymagane muszą występować nawet wtedy, gdy pomiar
+jest niedostępny. Wówczas stosujemy kropki. Pola
+opcjonalne bez dostępnego pomiaru można pominąć.
+
+### Przykłady raportów
+
+**1. Minimalny raport, tylko temperatura**
+
+```text
+!5215.01N/02055.58E_.../...g...t030
+```
+
+Temperatura 30°F. Brak pomiarów wiatru i porywów.
+
+**2. Temperatura i wiatr**
+
+```text
+!5215.01N/02055.58E_220/004g005t068
+```
+
+Wiatr z kierunku 220°, średnia prędkość 4 mph,
+porywy 5 mph, temperatura 68°F (20°C).
+
+**3. Temperatura, wilgotność i ciśnienie**
+
+```text
+!5215.01N/02055.58E_.../...g...t068h72b10132
+```
+
+Temperatura 20°C, wilgotność 72% i ciśnienie
+1013,2 hPa. Brak danych o wietrze.
+
+**4. Typowy kompletny raport meteorologiczny**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840
+```
+
+Raport zawiera wiatr, porywy, temperaturę, trzy
+pomiary opadów, wilgotność, ciśnienie i promieniowanie
+słoneczne.
+
+**5. Maksymalny przykład obejmujący dostępne pola**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840s002#123F+123V128X123Z00wRSW
+```
+
+Przykład demonstracyjny, obejmujący również pola
+historyczne i proponowane rozszerzenia. Kod `Z00`
+ilustruje składnię, nie stanowi zalecenia wyboru
+typu urządzenia.
+
+Długość pola Information: **88 bajtów**.
+
+Limit pola Information w APRS/AX.25: **256 bajtów**.
+
+Przykład mieści się w limicie, jednak nie należy
+transmitować wszystkich dostępnych pól bez potrzeby.
+
+
 ## CWOP: od stacji APRS do profesjonalnych obserwacji meteorologicznych
 
 Format WX znalazł zastosowanie również poza sieciami krótkofalarskimi. Przykładem jest **Citizen Weather Observer Program (CWOP)**, wywodzący się z inicjatywy APRSWXNET i środowiska radioamatorskiego. Program umożliwia ochotnikom przekazywanie pomiarów z prywatnych stacji pogodowych do wspólnego zasobu danych meteorologicznych. Mogą w nim uczestniczyć zarówno krótkofalowcy, jak i obserwatorzy przesyłający raporty bezpośrednio przez Internet, bez korzystania z transmisji radiowej.

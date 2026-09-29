@@ -277,6 +277,106 @@ The traditional weather-station symbol is `/_`, while the alternate symbol table
 
 This does not mean that every packet containing `_` is a WX report. In a position report, identify the symbol code in the correct location and verify the syntax of the data that follow it. In a positionless report, `_` has another function: it is the first byte of the Information field, that is, the DTI.
 
+## Structure of a complete WX report
+
+The following table describes an uncompressed weather report with a
+position, including the basic APRS format, additional fields, and later
+extension proposals.
+
+| Field | Required | Meaning | Unit / encoding |
+|---|---|---|---|
+| `!` | Yes | Position-report DTI | Alternatively `=`, `/`, `@` |
+| `5215.01N` | Yes | Latitude | DDMM.mmN/S |
+| `/` | Yes | Symbol table | `/` or `\` |
+| `02055.58E` | Yes | Longitude | DDDMM.mmE/W |
+| `_` | Yes | Weather-station symbol | WX |
+| `220` | Yes | Wind direction | 000-360°, unavailable: `...` |
+| `/` | Yes | Separator | Fixed character |
+| `004` | Yes | One-minute average wind speed | mph, unavailable: `...` |
+| `g005` | Recommended* | Maximum gust in the past 5 minutes | mph, unavailable: `g...` |
+| `t030` | Yes | Air temperature | °F, unavailable: `t...` |
+| `r000` | No | Rainfall in the past hour | 0.01 inch |
+| `p000` | No | Rainfall in the past 24 hours | 0.01 inch |
+| `P000` | No | Rainfall since midnight | 0.01 inch |
+| `h00` | No | Relative humidity | %, `00` = 100% |
+| `b10218` | No | Atmospheric pressure | 0.1 hPa, `10218` = 1021.8 hPa |
+| `L840` | No | Solar radiation | 0-999 W/m² |
+| `l123` | No | Solar radiation | 1000-1999 W/m²; here 1123 W/m² |
+| `s002` | No | Snowfall in the past 24 hours | inches |
+| `#123` | No | Raw rain-gauge counter | Pulses; device-dependent |
+| `F+123` | No | Water level relative to a reference level | 0.1 foot; here +12.3 feet |
+| `fxxxx` | No | Historical water-level proposal | Metres; superseded by `F` |
+| `V128` | No | Supply voltage | 0.1 V; here 12.8 V |
+| `X123` | No | Radiation dose rate | nSv/h; `12 × 10³` = 12 µSv/h |
+| `Zxx` | No | Device-type code | APRS 1.2 proposal |
+| `wRSW` | No | WX software and equipment identifier | Historical APRS101 example |
+
+*In a complete report, `gxxx` may be omitted according to later
+clarifications. Its presence is nevertheless recommended for
+compatibility with older software.*
+
+`L` and `l` are alternatives. Likewise, `F` and the historical `f`
+should not be used together.
+
+`F`, `V`, `X`, and `Z` originate from later protocol-extension proposals.
+Support for them is not guaranteed.
+
+Required fields must be present even when a measurement is unavailable.
+Use dots in that case. Optional fields without an available measurement
+may be omitted.
+
+### Report examples
+
+**1. Minimal report, temperature only**
+
+```text
+!5215.01N/02055.58E_.../...g...t030
+```
+
+Temperature 30°F. No wind or gust readings.
+
+**2. Temperature and wind**
+
+```text
+!5215.01N/02055.58E_220/004g005t068
+```
+
+Wind from 220°, average speed 4 mph, gusts 5 mph, temperature 68°F (20°C).
+
+**3. Temperature, humidity, and pressure**
+
+```text
+!5215.01N/02055.58E_.../...g...t068h72b10132
+```
+
+Temperature 20°C, humidity 72%, and pressure 1013.2 hPa. No wind data.
+
+**4. Typical complete weather report**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840
+```
+
+The report contains wind, gusts, temperature, three precipitation
+measurements, humidity, pressure, and solar radiation.
+
+**5. Maximum example covering the available fields**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840s002#123F+123V128X123Z00wRSW
+```
+
+This demonstration example also includes historical fields and proposed
+extensions. Code `Z00` illustrates the syntax; it is not a recommendation
+for choosing a device type.
+
+Information-field length: **88 bytes**.
+
+The APRS/AX.25 Information-field limit is **256 bytes**.
+
+The example is within the limit, but every available field should not be
+transmitted without a need.
+
 ## CWOP: from APRS stations to professional meteorological observations
 
 The WX format is used beyond amateur-radio networks. One example is the **Citizen Weather Observer Program (CWOP)**, which grew out of APRSWXNET and the amateur-radio community. The program enables volunteers to contribute measurements from private weather stations to a shared meteorological dataset. Both radio amateurs and observers who submit reports directly over the Internet, without radio transmission, may participate.

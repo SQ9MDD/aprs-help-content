@@ -277,6 +277,108 @@ El símbolo clásico de estación meteorológica es `/_`, y la tabla alternativa
 
 Esto no significa que cualquier paquete que contenga el carácter `_` sea un informe WX. En un informe de posición, hay que identificar el código de símbolo en el lugar correspondiente y verificar la sintaxis de los datos que le siguen. En un informe sin posición, `_` desempeña otra función: es el primer byte del campo Information, es decir, el DTI.
 
+## Estructura de un informe WX completo
+
+La siguiente tabla describe un informe meteorológico sin comprimir con
+posición, e incluye el formato APRS básico, los campos adicionales y las
+propuestas de ampliación posteriores.
+
+| Campo | Obligatorio | Significado | Unidad / codificación |
+|---|---|---|---|
+| `!` | Sí | DTI de informe de posición | Alternativamente `=`, `/`, `@` |
+| `5215.01N` | Sí | Latitud | DDMM.mmN/S |
+| `/` | Sí | Tabla de símbolos | `/` o `\` |
+| `02055.58E` | Sí | Longitud | DDDMM.mmE/W |
+| `_` | Sí | Símbolo de estación meteorológica | WX |
+| `220` | Sí | Dirección de procedencia del viento | 000-360°, no disponible: `...` |
+| `/` | Sí | Separador | Carácter fijo |
+| `004` | Sí | Velocidad media del viento durante 1 minuto | mph, no disponible: `...` |
+| `g005` | Recomendado* | Racha máxima de los últimos 5 minutos | mph, no disponible: `g...` |
+| `t030` | Sí | Temperatura del aire | °F, no disponible: `t...` |
+| `r000` | No | Precipitación de la última hora | 0,01 pulgadas |
+| `p000` | No | Precipitación de las últimas 24 horas | 0,01 pulgadas |
+| `P000` | No | Precipitación desde medianoche | 0,01 pulgadas |
+| `h00` | No | Humedad relativa | %, `00` = 100 % |
+| `b10218` | No | Presión atmosférica | 0,1 hPa, `10218` = 1021,8 hPa |
+| `L840` | No | Radiación solar | 0-999 W/m² |
+| `l123` | No | Radiación solar | 1000-1999 W/m²; aquí 1123 W/m² |
+| `s002` | No | Nieve caída en las últimas 24 horas | pulgadas |
+| `#123` | No | Contador sin procesar del pluviómetro | Pulsos; depende del dispositivo |
+| `F+123` | No | Nivel de agua respecto a un nivel de referencia | 0,1 pies; aquí +12,3 pies |
+| `fxxxx` | No | Propuesta histórica de nivel de agua | Metros; sustituida por `F` |
+| `V128` | No | Tensión de alimentación | 0,1 V; aquí 12,8 V |
+| `X123` | No | Tasa de dosis de radiación | nSv/h; `12 × 10³` = 12 µSv/h |
+| `Zxx` | No | Código de tipo de dispositivo | Propuesta APRS 1.2 |
+| `wRSW` | No | Identificador de software y equipo WX | Ejemplo histórico de APRS101 |
+
+*En un informe completo, `gxxx` puede omitirse según aclaraciones
+posteriores. Aun así, se recomienda incluirlo por compatibilidad con
+software antiguo.*
+
+`L` y `l` son alternativas. Del mismo modo, no deben emplearse a la vez
+`F` y el histórico `f`.
+
+`F`, `V`, `X` y `Z` proceden de propuestas posteriores de ampliación del
+protocolo. No se garantiza su compatibilidad.
+
+Los campos obligatorios deben estar presentes incluso cuando no haya una
+medición disponible. En tal caso se utilizan puntos. Los campos opcionales
+sin una medición disponible pueden omitirse.
+
+### Ejemplos de informes
+
+**1. Informe mínimo, solo temperatura**
+
+```text
+!5215.01N/02055.58E_.../...g...t030
+```
+
+Temperatura de 30°F. No hay mediciones de viento ni de rachas.
+
+**2. Temperatura y viento**
+
+```text
+!5215.01N/02055.58E_220/004g005t068
+```
+
+Viento procedente de 220°, velocidad media de 4 mph, rachas de 5 mph y
+temperatura de 68°F (20°C).
+
+**3. Temperatura, humedad y presión**
+
+```text
+!5215.01N/02055.58E_.../...g...t068h72b10132
+```
+
+Temperatura de 20°C, humedad del 72 % y presión de 1013,2 hPa. No hay
+datos de viento.
+
+**4. Informe meteorológico completo típico**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840
+```
+
+El informe contiene viento, rachas, temperatura, tres mediciones de
+precipitación, humedad, presión y radiación solar.
+
+**5. Ejemplo máximo que incluye todos los campos disponibles**
+
+```text
+!5215.01N/02055.58E_220/004g005t068r012p018P018h72b10132L840s002#123F+123V128X123Z00wRSW
+```
+
+Este ejemplo demostrativo también incluye campos históricos y ampliaciones
+propuestas. El código `Z00` ilustra la sintaxis; no constituye una
+recomendación para elegir un tipo de dispositivo.
+
+Longitud del campo Information: **88 bytes**.
+
+El límite del campo Information en APRS/AX.25 es de **256 bytes**.
+
+El ejemplo está dentro del límite, pero no deben transmitirse todos los
+campos disponibles sin necesidad.
+
 ## CWOP: de las estaciones APRS a las observaciones meteorológicas profesionales
 
 El formato WX también se utiliza fuera de las redes de radioaficionados. Un ejemplo es el **Citizen Weather Observer Program (CWOP)**, surgido de APRSWXNET y de la comunidad de radioaficionados. El programa permite que voluntarios aporten mediciones de sus estaciones meteorológicas privadas a un conjunto compartido de datos meteorológicos. Pueden participar tanto radioaficionados como observadores que envían informes directamente por Internet, sin necesidad de transmisión por radio.
